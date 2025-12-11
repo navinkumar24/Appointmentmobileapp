@@ -52,3 +52,59 @@ export const getDoctorLeaves = async (doctorID: number | string) => {
         showToast("error", "Error", error?.response?.data?.errorMessage)
     }
 };
+export const getAvailableSlots = async (doctorID: number | string, appointmentDate: string | any) => {
+    const { token, baseUrl } = await getStoredValues();
+    try {
+        const response = await axios.post(`${baseUrl}/opd/appointment/getAvailableSlots`,
+            {
+                "genericRequestEntity": {
+                    "doctorID": doctorID,
+                    "appointmentDate": appointmentDate
+                }
+            },
+            {
+                headers: {
+                    Authorization: token,
+                    "Content-Type": "application/json",
+                },
+            }
+        );
+        if (response?.data?.success) {
+            return response?.data?.responseList;
+        }
+    } catch (err) {
+        const error = err as AxiosError<any>;
+        showToast("error", "Error", error?.response?.data?.errorMessage)
+    }
+};
+export const createAppointment = async (formData: any) => {
+    const { token, baseUrl } = await getStoredValues();
+    try {
+        const response = await axios.post(`${baseUrl}/opd/appointment/createAppointment`,
+            {
+                "appointmentRequestEntity": {
+                    "appointmentStartTime": formData?.startTime,
+                    "appointmentEndTime": formData?.endTime,
+                    "appointmentDate": formData?.appointmentDate,
+                    "orderID": "order_hghs8488",
+                    "paymentID": "pay_kfdgj8ng",
+                    "doctorID": formData?.doctorID,
+                    "patientID": 2
+                }
+            },
+            {
+                headers: {
+                    Authorization: token,
+                    "Content-Type": "application/json",
+                },
+            }
+        );
+        if (response?.data?.success) {
+            return response?.data?.responseList;
+        }
+    } catch (err) {
+        const error = err as AxiosError<any>;
+        showToast("error", "Error", error?.response?.data?.errorMessage)
+    }
+};
+

@@ -9,6 +9,8 @@ import { AppDispatch, RootState } from '@/app/store/store';
 import { fetchAllSpecializations } from '@/app/store/homeSlice';
 import getStoredValues from '@/app/utils/getStoredValues';
 import { SvgUri } from 'react-native-svg';
+import { setDoctorSpecialitiesPageTitle } from '@/app/store/utilsSlice';
+
 
 export default function Home() {
   const colors = useColorSchemes();
@@ -19,16 +21,16 @@ export default function Home() {
   const [imageErrorItemList, setImageErrorItemList] = useState<number[]>([]);
   const router = useRouter();
 
+
+
   useEffect(() => {
     (async () => {
       const { file_service_base_url } = await getStoredValues();
       setFileServiceBaseUrl(file_service_base_url);
+      await dispatch(fetchAllSpecializations());
     })();
   }, []);
 
-  useEffect(() => {
-    dispatch(fetchAllSpecializations());
-  }, []);
 
   return (
     <LinearGradient
@@ -37,12 +39,10 @@ export default function Home() {
       end={{ x: 1, y: 1 }}
       style={styles.mainPageContainer}
     >
-
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 30 }}
       >
-
         {/* OUR SERVICES */}
         <Text style={styles.sectionTitle}>Our Services</Text>
 
@@ -86,6 +86,7 @@ export default function Home() {
                   key={item.entityID}
                   style={styles.specialitiesItemCard}
                   activeOpacity={0.8}
+                  onPress={() => { dispatch(setDoctorSpecialitiesPageTitle(item?.entityBusinessName)), router.push("/screens/ShowDoctors") }}
                 >
                   {iconUrl && !isImgErrExist ? (
                     <SvgUri

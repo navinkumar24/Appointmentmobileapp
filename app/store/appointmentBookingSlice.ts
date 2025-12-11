@@ -1,6 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import type { AxiosError } from "axios";
-import { getAllDoctorDropDown, getDoctorLeaves } from "../api/appointmentBooking";
+import { createAppointment, getAllDoctorDropDown, getAvailableSlots, getDoctorLeaves } from "../api/appointmentBooking";
 
 
 
@@ -28,10 +28,35 @@ export const fetchDoctorLeaves = createAsyncThunk(
         }
     }
 )
+export const fetchAvailableSlots = createAsyncThunk(
+    'home/fetchAvailableSlots',
+    async ({ doctorID, appointmentDate }: any, { rejectWithValue }) => {
+        try {
+            const response = getAvailableSlots(doctorID, appointmentDate);
+            return response;
+        } catch (err) {
+            const error = err as AxiosError<any>
+            rejectWithValue(error?.message)
+        }
+    }
+)
+export const creatingAppointment = createAsyncThunk(
+    'appointment/creatingAppointment',
+    async (formData: any, { rejectWithValue }) => {
+        try {
+            const response = createAppointment(formData);
+            return response;
+        } catch (err) {
+            const error = err as AxiosError<any>
+            rejectWithValue(error?.message)
+        }
+    }
+)
 
 type InitialState = {
     allDoctors: any[];
     doctorLeaves: any[];
+    allAvailableSlots: any[];
     loading: boolean;
     error: string | any
 }
@@ -39,6 +64,7 @@ type InitialState = {
 const initialState: InitialState = {
     allDoctors: [],
     doctorLeaves: [],
+    allAvailableSlots: [],
     loading: false,
     error: null,
 }
@@ -68,6 +94,17 @@ export const appointmentBookingSlice = createSlice({
                 state.loading = false;
             })
             .addCase(fetchDoctorLeaves.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload as string
+            })
+            .addCase(fetchAvailableSlots.pending, (state) => {
+                state.loading = true;
+            })
+            .addCase(fetchAvailableSlots.fulfilled, (state, action) => {
+                state.allAvailableSlots = action.payload;
+                state.loading = false;
+            })
+            .addCase(fetchAvailableSlots.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload as string
             })

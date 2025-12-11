@@ -17,24 +17,23 @@ import { ColorTheme } from "../types/ColorTheme";
 import ErrorCard from '../components/ErrorCard'
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "../store/store";
-import { fetchAllDoctorDropDown, fetchDoctorLeaves } from "../store/appointmentBookingSlice";
+import { creatingAppointment, fetchAllDoctorDropDown, fetchAvailableSlots, fetchDoctorLeaves } from "../store/appointmentBookingSlice";
 import dayjs from 'dayjs'
 import { useLeavesMessage } from "../utils/useLeavesMessage";
 
 export default function BookAppointment() {
   const colors = useColorSchemes();
   const styles = dynamicStyles(colors);
-  const { allDoctors, doctorLeaves } = useSelector((state: RootState) => state.appointmentBooking);
+  const { allDoctors, doctorLeaves, allAvailableSlots } = useSelector((state: RootState) => state.appointmentBooking);
   const dispatch = useDispatch<AppDispatch>()
   // Select / search state
   const [query, setQuery] = useState("");
   const [modalVisible, setModalVisible] = useState<boolean>(false);
+  // Selected Doctor
   const [selectedItem, setSelectedItem] = useState<any>(null);
   // Date picker state
   const [pickedDate, setPickedDate] = useState<any>(null);
   const [showDatePicker, setShowDatePicker] = useState<boolean>(false);
-  // Slot selection
-  const [availableSlots, setAvailableSlots] = useState<any[]>([]);
   const [selectedSlot, setSelectedSlot] = useState<any>(null);
 
   useEffect(() => {
@@ -47,38 +46,22 @@ export default function BookAppointment() {
     dispatch(fetchDoctorLeaves(selectedItem?.entityBusinessID))
   }, [selectedItem])
 
-
-
-  // Simulate fetching available slots based on selection and date
   useEffect(() => {
-    if (!selectedItem || !pickedDate) {
-      setAvailableSlots([]);
-      setSelectedSlot(null);
-      return;
-    }
-
-    // For demo: create dummy slots; replace with API call
-    const slots = [
-      "09:00 AM",
-      "09:30 AM",
-      "10:00 AM",
-      "11:00 AM",
-      "02:00 PM",
-      "03:30 PM",
-    ].map((s, i) => ({ id: `${i}`, label: s }));
-
-    // simple variation based on selectedItem id to mimic different schedules
-    const filtered = slots.filter((_, idx) => (selectedItem.id % 2 === 0 ? idx % 2 === 0 : true));
-    setAvailableSlots(filtered);
-    setSelectedSlot(null);
-  }, [selectedItem, pickedDate]);
+    dispatch(fetchAvailableSlots({ doctorID: selectedItem?.entityBusinessID, appointmentDate: dayjs(pickedDate)?.format("DD-MM-YYYY") }))
+  }, [pickedDate])
 
   // Derived filtered list
   const filteredData = useMemo(() => {
-    if (!query) return allDoctors;
-    const q = query?.trim()?.toLowerCase();
-    return allDoctors?.filter((d) => `${d?.entitySalutationName} ${d.entityBusinessName} ${d?.specializationName ? "(" + d?.specializationName + ")" : ""}`?.toLowerCase()?.includes(q));
-  }, [query]);
+    const doctors = allDoctors ?? [];
+    if (!query) return doctors;
+    const q = query.trim().toLowerCase();
+    return doctors.filter((d) =>
+      `${d?.entitySalutationName} ${d.entityBusinessName} ${d?.specializationName ? "(" + d?.specializationName + ")" : ""}`
+        .toLowerCase()
+        .includes(q)
+    );
+  }, [query, allDoctors]);
+
 
 
   const leaveMessage = useLeavesMessage(doctorLeaves ?? [], pickedDate ?? null);
@@ -95,6 +78,20 @@ export default function BookAppointment() {
     if (date) {
       setPickedDate(date);
     }
+  }
+
+  const handleSubmit = () => {
+    console.log("Selected Doctor -- ", selectedItem);
+    console.log("Selected Slots -- ", selectedSlot)
+    console.log("Picked Date -- ", pickedDate);
+    const formData = {
+      startTime: selectedSlot?.startTime,
+      endTime: selectedSlot?.endTime,
+      appointmentDate: dayjs(pickedDate)?.format("DD-MM-YYYY"),
+      doctorID: selectedItem?.entityBusinessID
+    }
+    dispatch(creatingAppointment(formData))
+    setSelectedSlot(null)
   }
 
   return (
@@ -138,34 +135,36 @@ export default function BookAppointment() {
         </Text>
       </View>}
 
-      {leaveMessage && <ErrorCard
-        errorTitle={"Not Available"}
-        children={leaveMessage}
-      />}
+      {leaveMessage &&
+        <ErrorCard
+          errorTitle={"Not Available"}
+          children={leaveMessage}
+        />
+      }
 
       {/* Available time slots */}
       <View style={styles.slotsMainContainer}>
         <Text style={styles.sectionTitle}>Available Time Slots</Text>
-        {availableSlots.length === 0 ? (
-          <Text style={styles.noSlotsText}>Select a doctor and date to view slots</Text>
+        {allAvailableSlots?.length === 0 ? (
+          <Text style={styles.noSlotsText}>No Slots Available</Text>
         ) : (
           <View style={styles.slotsContainer}>
             {
-              availableSlots?.map((item) => (
+              allAvailableSlots?.map((item) => (
                 <TouchableOpacity
                   key={item?.entityID}
                   style={[
                     styles.slotButton,
-                    selectedSlot?.id === item.id && { backgroundColor: colors.primary },
+                    selectedSlot?.entityID === item.entityID && { backgroundColor: colors.primary },
                   ]}
                   onPress={() => setSelectedSlot(item)}
                   activeOpacity={0.8}
                 >
                   <Text style={[
                     styles.slotText,
-                    selectedSlot?.id === item.id && { color: colors.onPrimary }
+                    selectedSlot?.entityID === item.entityID && { color: colors.onPrimary }
                   ]}>
-                    {item.label}
+                    {`${item.startTime} - ${item?.endTime}`}
                   </Text>
                 </TouchableOpacity>
               ))
@@ -179,13 +178,7 @@ export default function BookAppointment() {
         <TouchableOpacity
           style={[styles.bookBtn, !(selectedItem && pickedDate && selectedSlot) && { opacity: 0.5 }]}
           disabled={!(selectedItem && pickedDate && selectedSlot)}
-          onPress={() => {
-            // TODO: Call your booking API here
-            // For demo, just alert
-            alert(
-              `Booking ${selectedItem?.label} on ${pickedDate?.toDateString()} at ${selectedSlot?.label}`
-            );
-          }}
+          onPress={handleSubmit}
         >
           <Text style={styles.bookBtnText}>Proceed To Pay ₹ {selectedItem?.opdNewCharges}</Text>
         </TouchableOpacity>
@@ -346,7 +339,7 @@ const dynamicStyles = (colors: ColorTheme) =>
       color: colors.onSurfaceVariant,
     },
     slotsMainContainer: {
-      marginTop : 10,
+      marginTop: 10,
     },
     slotsContainer: {
       marginTop: 6,
@@ -363,7 +356,10 @@ const dynamicStyles = (colors: ColorTheme) =>
       marginBottom: 10,
     },
     noSlotsText: {
+      marginTop: 20,
+      alignSelf: "center",
       color: colors.onSurfaceVariant,
+      fontWeight: '500'
     },
 
     slotButton: {
@@ -382,14 +378,14 @@ const dynamicStyles = (colors: ColorTheme) =>
 
     bookRow: {
       marginTop: "auto",
-      marginBottom: 24,
+      marginBottom: 28,
       alignItems: "center",
     },
     bookBtn: {
       width: "100%",
       backgroundColor: colors.primary,
       paddingVertical: 14,
-      borderRadius: 12,
+      borderRadius: 8,
       alignItems: "center",
     },
     bookBtnText: {

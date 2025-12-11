@@ -5,6 +5,7 @@ import themeReducer from './themeSlice';
 import authReducer from './authSlice'
 import homeReducer from "./homeSlice";
 import appointmentBookingReducer from "./appointmentBookingSlice";
+import utilsReducer from "./utilsSlice";
 
 export const store = configureStore({
   reducer: {
@@ -12,7 +13,8 @@ export const store = configureStore({
     // user : userReducer,
     auth: authReducer,
     home: homeReducer,
-    appointmentBooking : appointmentBookingReducer
+    appointmentBooking : appointmentBookingReducer,
+    utils : utilsReducer
   },
 });
 

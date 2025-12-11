@@ -1,8 +1,11 @@
 import { Stack } from "expo-router";
 import useColorSchemes from "./themes/ColorSchemes";
+import { useSelector } from "react-redux";
+import { RootState } from "./store/store";
 
 function ThemedLayoutWrapper() {
   const colors = useColorSchemes();
+  const { doctorSpecialitiesPageTitle } = useSelector((state: RootState) => state.utils);
 
   return (
     <Stack>
@@ -17,7 +20,7 @@ function ThemedLayoutWrapper() {
         headerStyle: {
           backgroundColor: colors.primaryContainer
         },
-        headerTintColor : colors.onPrimaryContainer
+        headerTintColor: colors.onPrimaryContainer
       }} />
       <Stack.Screen
         name="screens/ShowAllSpecialities"
@@ -34,6 +37,14 @@ function ThemedLayoutWrapper() {
           headerStyle: { backgroundColor: colors.primaryContainer },
           headerTintColor: colors.onPrimaryContainer,
         }}
+      />
+      <Stack.Screen
+        name="screens/ShowDoctors"
+        options={{
+          title: doctorSpecialitiesPageTitle,
+          headerStyle: { backgroundColor: colors.primaryContainer },
+          headerTintColor: colors.onPrimaryContainer,
+        } }
       />
 
       <Stack.Screen name="(drawer)" options={{ headerShown: false }} />
