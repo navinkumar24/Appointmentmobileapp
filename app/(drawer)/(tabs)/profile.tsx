@@ -1,0 +1,242 @@
+import React from "react";
+import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView } from "react-native";
+import useColorSchemes from "@/app/themes/ColorSchemes";
+import { ColorTheme } from "@/app/types/ColorTheme";
+import { LinearGradient } from "expo-linear-gradient";
+import { Ionicons } from "@expo/vector-icons";
+
+export default function Profile() {
+  const colors = useColorSchemes();
+  const styles = dynamicStyles(colors);
+
+  return (
+    <ScrollView showsVerticalScrollIndicator={false}>
+      <LinearGradient
+        colors={[colors.surface, colors.secondaryContainer]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.container}
+      >
+        {/* HEADER */}
+        <View style={styles.headerSection}>
+          <Image
+            source={require("../../../assets/images/profile.png")}
+            style={styles.avatar}
+          />
+          <Text style={styles.userName}>Rohit Kumar</Text>
+          <Text style={styles.userEmail}>rohit@gmail.com</Text>
+
+          <TouchableOpacity style={styles.editButton}>
+            <Ionicons name="create-outline" size={18} color={colors.onPrimary} />
+            <Text style={styles.editButtonText}>Edit Profile</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* QUICK STATS */}
+        <View style={styles.statsRow}>
+          <View style={styles.statCard}>
+            <Text style={styles.statNumber}>12</Text>
+            <Text style={styles.statLabel}>Appointments</Text>
+          </View>
+
+          <View style={styles.statCard}>
+            <Text style={styles.statNumber}>5</Text>
+            <Text style={styles.statLabel}>Reports</Text>
+          </View>
+
+          <View style={styles.statCard}>
+            <Text style={styles.statNumber}>4.8</Text>
+            <Text style={styles.statLabel}>Rating</Text>
+          </View>
+        </View>
+
+        {/* ABOUT SECTION */}
+        <View style={styles.aboutSection}>
+          <Text style={styles.sectionTitle}>About Me</Text>
+          <Text style={styles.aboutText}>
+            Passionate user focused on health and medical wellbeing. Actively using the platform to manage appointments, view reports, and stay connected with our doctors.
+          </Text>
+        </View>
+
+        {/* ACTION BUTTONS */}
+        <View style={styles.actionButtonsRow}>
+          <TouchableOpacity style={styles.primaryActionButton}>
+            <Ionicons name="chatbubble-ellipses-outline" size={20} color="white" />
+            <Text style={styles.primaryActionButtonText}>Message</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.outlineActionButton}>
+            <Ionicons name="call-outline" size={20} color={colors.primary} />
+            <Text style={styles.outlineActionButtonText}>Call</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* SETTINGS LIST */}
+        <View style={styles.settingsSection}>
+          <Text style={styles.sectionTitle}>Account Settings</Text>
+
+          <SettingItem icon="person-outline" label="Personal Information" />
+          <SettingItem icon="shield-checkmark-outline" label="Privacy Settings" />
+          <SettingItem icon="notifications-outline" label="Notifications" />
+          <SettingItem icon="card-outline" label="Payment Methods" />
+          <SettingItem icon="help-circle-outline" label="Help & Support" />
+          <SettingItem icon="log-out-outline" label="Logout" isLogout />
+        </View>
+
+      </LinearGradient>
+    </ScrollView>
+  );
+}
+
+/* ------------------------------------
+      COMPONENTS
+------------------------------------ */
+function SettingItem({ icon, label, isLogout = false }: any) {
+  return (
+    <TouchableOpacity style={{ flexDirection: "row", alignItems: "center", paddingVertical: 14 }}>
+      <Ionicons name={icon} size={22} color={isLogout ? "red" : "#333"} />
+      <Text style={{ marginLeft: 12, fontSize: 15, color: isLogout ? "red" : "#333" }}>
+        {label}
+      </Text>
+    </TouchableOpacity>
+  );
+}
+
+/* ------------------------------------
+      DYNAMIC STYLES
+------------------------------------ */
+
+const dynamicStyles = (colors: ColorTheme) =>
+  StyleSheet.create({
+    container: { flex: 1, padding: 16 },
+
+    headerSection: {
+      alignItems: "center",
+      marginTop: 20,
+      marginBottom: 12,
+    },
+
+    avatar: {
+      width: 110,
+      height: 110,
+      borderRadius: 60,
+      marginBottom: 12,
+      borderWidth: 2,
+      borderColor: colors.primary,
+    },
+
+    userName: {
+      fontSize: 22,
+      fontWeight: "700",
+      color: colors.onSurface,
+    },
+
+    userEmail: {
+      fontSize: 14,
+      color: colors.onSurfaceVariant,
+      marginBottom: 12,
+    },
+
+    editButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: colors.primary,
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+      borderRadius: 20,
+      marginTop: 4,
+    },
+
+    editButtonText: {
+      color: colors.onPrimary,
+      marginLeft: 6,
+      fontWeight: "500",
+    },
+
+    /* Stats Row */
+    statsRow: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      marginTop: 20,
+    },
+
+    statCard: {
+      width: "32%",
+      backgroundColor: colors.primaryContainer,
+      borderRadius: 12,
+      paddingVertical: 16,
+      alignItems: "center",
+    },
+
+    statNumber: {
+      fontSize: 20,
+      fontWeight: "700",
+      color: colors.primary,
+    },
+
+    statLabel: {
+      fontSize: 12,
+      color: colors.onPrimaryContainer,
+      marginTop: 4,
+    },
+
+    /* About */
+    aboutSection: { marginTop: 24 },
+    sectionTitle: {
+      fontSize: 18,
+      fontWeight: "600",
+      color: colors.primary,
+      marginBottom: 6,
+    },
+    aboutText: {
+      fontSize: 14,
+      lineHeight: 20,
+      color: colors.onSurfaceVariant,
+    },
+
+    /* Action Buttons */
+    actionButtonsRow: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      marginTop: 20,
+    },
+
+    primaryActionButton: {
+      width: "48%",
+      backgroundColor: colors.primary,
+      flexDirection: "row",
+      justifyContent: "center",
+      alignItems: "center",
+      paddingVertical: 12,
+      borderRadius: 10,
+    },
+
+    primaryActionButtonText: {
+      color: "white",
+      marginLeft: 6,
+      fontWeight: "600",
+    },
+
+    outlineActionButton: {
+      width: "48%",
+      borderWidth: 2,
+      borderColor: colors.primary,
+      flexDirection: "row",
+      justifyContent: "center",
+      alignItems: "center",
+      paddingVertical: 12,
+      borderRadius: 10,
+    },
+
+    outlineActionButtonText: {
+      color: colors.primary,
+      marginLeft: 6,
+      fontWeight: "600",
+    },
+
+    /* Settings Section */
+    settingsSection: {
+      marginTop: 30,
+      marginBottom: 40,
+    },
+  });
