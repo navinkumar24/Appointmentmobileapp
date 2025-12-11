@@ -3,9 +3,9 @@ import React from "react";
 import useColorSchemes from "../themes/ColorSchemes";
 import { Ionicons } from "@expo/vector-icons";
 
-const DoctorNotAvailableBanner = ({ errorTitle, text }: any) => {
+const DoctorNotAvailableBanner = ({ errorTitle, children }: any) => {
     const colors = useColorSchemes();
-    const errorBg = `${colors.error}20`; 
+    const errorBg = `${colors.error}20`;
 
     return (
         <View
@@ -17,7 +17,6 @@ const DoctorNotAvailableBanner = ({ errorTitle, text }: any) => {
                 borderLeftColor: colors.error,
                 flexDirection: "row",
                 alignItems: "center",
-                marginVertical: 0,
             }}
         >
             <Ionicons
@@ -39,15 +38,8 @@ const DoctorNotAvailableBanner = ({ errorTitle, text }: any) => {
                     {errorTitle}
                 </Text>
 
-                <Text
-                    style={{
-                        color: colors.onSurface,
-                        fontSize: 14,
-                        lineHeight: 20,
-                    }}
-                >
-                    {text}
-                </Text>
+                {/* children can be <Text> or any JSX */}
+                <View>{children}</View>
             </View>
         </View>
     );

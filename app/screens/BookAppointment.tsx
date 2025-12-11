@@ -15,33 +15,39 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import useColorSchemes from "@/app/themes/ColorSchemes";
 import { ColorTheme } from "../types/ColorTheme";
 import ErrorCard from '../components/ErrorCard'
-
-
-const DATA = [
-  { id: "1", label: "Dr. Asha Mehra (Cardiology)" },
-  { id: "2", label: "Dr. Rohit Verma (Dermatology)" },
-  { id: "3", label: "Dr. Priya Gupta (Pediatrics)" },
-  { id: "4", label: "Dr. Aman Singh (Orthopedics)" },
-  { id: "5", label: "Dermatology" },
-  { id: "6", label: "Cardiology" },
-];
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "../store/store";
+import { fetchAllDoctorDropDown, fetchDoctorLeaves } from "../store/appointmentBookingSlice";
+import dayjs from 'dayjs'
+import { useLeavesMessage } from "../utils/useLeavesMessage";
 
 export default function BookAppointment() {
   const colors = useColorSchemes();
   const styles = dynamicStyles(colors);
-
+  const { allDoctors, doctorLeaves } = useSelector((state: RootState) => state.appointmentBooking);
+  const dispatch = useDispatch<AppDispatch>()
   // Select / search state
   const [query, setQuery] = useState("");
   const [modalVisible, setModalVisible] = useState<boolean>(false);
   const [selectedItem, setSelectedItem] = useState<any>(null);
-
   // Date picker state
   const [pickedDate, setPickedDate] = useState<any>(null);
   const [showDatePicker, setShowDatePicker] = useState<boolean>(false);
-
   // Slot selection
   const [availableSlots, setAvailableSlots] = useState<any[]>([]);
   const [selectedSlot, setSelectedSlot] = useState<any>(null);
+
+  useEffect(() => {
+    (async () => {
+      await dispatch(fetchAllDoctorDropDown())
+    })();
+  }, [])
+
+  useEffect(() => {
+    dispatch(fetchDoctorLeaves(selectedItem?.entityBusinessID))
+  }, [selectedItem])
+
+
 
   // Simulate fetching available slots based on selection and date
   useEffect(() => {
@@ -69,10 +75,14 @@ export default function BookAppointment() {
 
   // Derived filtered list
   const filteredData = useMemo(() => {
-    if (!query) return DATA;
-    const q = query.trim().toLowerCase();
-    return DATA.filter((d) => d.label.toLowerCase().includes(q));
+    if (!query) return allDoctors;
+    const q = query?.trim()?.toLowerCase();
+    return allDoctors?.filter((d) => `${d?.entitySalutationName} ${d.entityBusinessName} ${d?.specializationName ? "(" + d?.specializationName + ")" : ""}`?.toLowerCase()?.includes(q));
   }, [query]);
+
+
+  const leaveMessage = useLeavesMessage(doctorLeaves ?? [], pickedDate ?? null);
+
 
   function onSelectItem(item: any) {
     setSelectedItem(item);
@@ -87,13 +97,11 @@ export default function BookAppointment() {
     }
   }
 
-  function formatDateShort(date: any) {
-    if (!date) return "Select date";
-    return date.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
-  }
-  const errorBg = `${colors.error}20`;
   return (
     <View style={styles.container}>
+
+      <Text style={styles.bookingTitle}>Book Your Appointment Today and Take the First Step Toward Better Health</Text>
+
       {/* Top row: Select + Date button */}
       <View style={styles.topRow}>
         <TouchableOpacity
@@ -102,7 +110,7 @@ export default function BookAppointment() {
           onPress={() => setModalVisible(true)}
         >
           <Text style={selectedItem ? styles.selectTextValue : styles.selectTextPlaceholder}>
-            {selectedItem ? selectedItem?.label : "search doctors..."}
+            {selectedItem ? `${selectedItem?.entitySalutationName}. ${selectedItem.entityBusinessName} ${selectedItem?.specializationName ? "(" + selectedItem?.specializationName + ")" : ""}` : "search doctors..."}
           </Text>
           <Ionicons name="chevron-down" size={20} color={colors.onSurfaceVariant} />
         </TouchableOpacity>
@@ -117,54 +125,52 @@ export default function BookAppointment() {
       </View>
 
       {/* Selected summary */}
-      <View style={styles.summaryCard}>
+      {selectedItem && <View style={styles.summaryCard}>
         <Text style={styles.summaryLabel}>Selected</Text>
         <Text style={styles.summaryItem}>Dr. Name :
-          <Text style={styles.summaryItemValue}> {selectedItem ? selectedItem.label : "  No doctor / speciality selected"}</Text>
+          {selectedItem.entityBusinessName && <Text style={styles.summaryItemValue}> {`${selectedItem?.entitySalutationName ?? ""}. ${selectedItem.entityBusinessName}`}</Text>}
         </Text>
         <Text style={styles.summaryItem}>Specialities :
-          <Text style={styles.summaryItemValue}>{" Cardiologist"}</Text>
+          {selectedItem?.specializationName && <Text style={styles.summaryItemValue}>{" " + selectedItem?.specializationName}</Text>}
         </Text>
         <Text style={styles.summaryItem}>Date :
-          <Text style={styles.summaryItemValue}> {pickedDate ? ` On ${pickedDate.toLocaleDateString()}` : "No date selected"}</Text>
+          <Text style={styles.summaryItemValue}> {pickedDate ? ` ${dayjs(pickedDate)?.format("DD-MM-YYYY")}` : "No selected"}</Text>
         </Text>
-      </View>
+      </View>}
 
-      <ErrorCard
+      {leaveMessage && <ErrorCard
         errorTitle={"Not Available"}
-        text={"This doctor is not available from 11-12-2025 to 13-11-2025"}
-      />
-
+        children={leaveMessage}
+      />}
 
       {/* Available time slots */}
-      <View style={styles.slotsContainer}>
+      <View style={styles.slotsMainContainer}>
         <Text style={styles.sectionTitle}>Available Time Slots</Text>
         {availableSlots.length === 0 ? (
           <Text style={styles.noSlotsText}>Select a doctor and date to view slots</Text>
         ) : (
-          <FlatList
-            data={availableSlots}
-            keyExtractor={(it) => it.id}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                style={[
-                  styles.slotButton,
-                  selectedSlot?.id === item.id && { backgroundColor: colors.primary },
-                ]}
-                onPress={() => setSelectedSlot(item)}
-                activeOpacity={0.8}
-              >
-                <Text style={[
-                  styles.slotText,
-                  selectedSlot?.id === item.id && { color: colors.onPrimary }
-                ]}>
-                  {item.label}
-                </Text>
-              </TouchableOpacity>
-            )}
-          />
+          <View style={styles.slotsContainer}>
+            {
+              availableSlots?.map((item) => (
+                <TouchableOpacity
+                  key={item?.entityID}
+                  style={[
+                    styles.slotButton,
+                    selectedSlot?.id === item.id && { backgroundColor: colors.primary },
+                  ]}
+                  onPress={() => setSelectedSlot(item)}
+                  activeOpacity={0.8}
+                >
+                  <Text style={[
+                    styles.slotText,
+                    selectedSlot?.id === item.id && { color: colors.onPrimary }
+                  ]}>
+                    {item.label}
+                  </Text>
+                </TouchableOpacity>
+              ))
+            }
+          </View>
         )}
       </View>
 
@@ -181,7 +187,7 @@ export default function BookAppointment() {
             );
           }}
         >
-          <Text style={styles.bookBtnText}>Book Appointment</Text>
+          <Text style={styles.bookBtnText}>Proceed To Pay ₹ {selectedItem?.opdNewCharges}</Text>
         </TouchableOpacity>
       </View>
 
@@ -205,14 +211,15 @@ export default function BookAppointment() {
 
             <FlatList
               data={filteredData}
-              keyExtractor={(item) => item.id}
+              keyExtractor={(item) => item.entityID}
               keyboardShouldPersistTaps="handled"
               renderItem={({ item }) => (
                 <TouchableOpacity
                   style={styles.modalItem}
                   onPress={() => onSelectItem(item)}
+                  activeOpacity={0.8}
                 >
-                  <Text style={styles.modalItemLabel}>{item.label}</Text>
+                  <Text style={styles.modalItemLabel}>{`${item?.entitySalutationName} ${item.entityBusinessName} ${item?.specializationName ? "(" + item?.specializationName + ")" : ""}`}</Text>
                 </TouchableOpacity>
               )}
               ItemSeparatorComponent={() => <View style={styles.modalSeparator} />}
@@ -244,11 +251,17 @@ const dynamicStyles = (colors: ColorTheme) =>
       padding: 6,
       backgroundColor: colors.background,
     },
+    bookingTitle: {
+      fontSize: 15,
+      fontWeight: '600',
+      color: colors.primary,
+      marginVertical: 10,
+    },
     topRow: {
       flexDirection: "row",
       alignItems: "center",
       marginBottom: 12,
-      marginTop : 10
+      marginTop: 10
     },
     selectInput: {
       flex: 1,
@@ -332,10 +345,16 @@ const dynamicStyles = (colors: ColorTheme) =>
       marginTop: 6,
       color: colors.onSurfaceVariant,
     },
-
+    slotsMainContainer: {
+      marginTop : 10,
+    },
     slotsContainer: {
       marginTop: 6,
       marginBottom: 20,
+      flexDirection: "row",
+      justifyContent: "center",
+      alignItems: "center",
+      flexWrap: "wrap"
     },
     sectionTitle: {
       fontSize: 16,
@@ -351,10 +370,10 @@ const dynamicStyles = (colors: ColorTheme) =>
       paddingVertical: 10,
       paddingHorizontal: 14,
       borderRadius: 10,
-      marginRight: 10,
       backgroundColor: colors.surfaceVariant || "#f3f3f3",
       borderWidth: 1,
       borderColor: colors.outline || "#eee",
+      margin: 5
     },
     slotText: {
       color: colors.onSurface,

@@ -4,13 +4,15 @@ import themeReducer from './themeSlice';
 // import userReducer from './userSlice'
 import authReducer from './authSlice'
 import homeReducer from "./homeSlice";
+import appointmentBookingReducer from "./appointmentBookingSlice";
 
 export const store = configureStore({
   reducer: {
     theme: themeReducer,
     // user : userReducer,
     auth: authReducer,
-    home: homeReducer
+    home: homeReducer,
+    appointmentBooking : appointmentBookingReducer
   },
 });
 

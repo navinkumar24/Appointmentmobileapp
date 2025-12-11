@@ -13,7 +13,7 @@ function ThemedLayoutWrapper() {
       <Stack.Screen name="screens/SignupFormScreen" options={{ headerShown: false }} />
       <Stack.Screen name="screens/ForgotPassword" options={{ headerShown: false }} />
       <Stack.Screen name="screens/BookAppointment" options={{
-        title: "Book Your Appointment",
+        title: "Appointment Booking",
         headerStyle: {
           backgroundColor: colors.primaryContainer
         },
