@@ -8,16 +8,17 @@ import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "../store/store";
 import { ColorTheme } from "../types/ColorTheme";
 import { LinearGradient } from "expo-linear-gradient";
+import { setDoctorSpecialitiesPageTitle } from "../store/utilsSlice";
 
 
 const MENU_ITEMS = [
-    { label: "Home", icon: "home", route: "(tabs)/home" },
-    { label: "Our Doctors", icon: "doctor", route: "/screens/DoctorProfile" },
-    { label: "My Appointment", icon: "calendar-month", route: "(tabs)/appointment" },
-    { label: "My Reports", icon: "file-document-outline", route: "(tabs)/account" },
-    { label: "Update Profile", icon: "account-edit-outline", route: "(tabs)/profile" },
-    { label: "Settings", icon: "cog-outline", route: "/screens/settingScreen" },
-    { label: "Log Out", icon: "logout", route: "login" },
+    { id: 1, label: "Home", icon: "home", route: "(tabs)/home" },
+    { id: 2, label: "Our Doctors", icon: "doctor", route: "/screens/ShowDoctors" },
+    { id: 3, label: "My Appointment", icon: "calendar-month", route: "(tabs)/appointment" },
+    { id: 4, label: "My Reports", icon: "file-document-outline", route: "(tabs)/account" },
+    { id: 5, label: "Update Profile", icon: "account-edit-outline", route: "(tabs)/profile" },
+    { id: 6, label: "Settings", icon: "cog-outline", route: "/screens/settingScreen" },
+    { id: 7, label: "Log Out", icon: "logout", route: "login" },
 ];
 
 export default function DrawerLayout() {
@@ -55,7 +56,12 @@ export default function DrawerLayout() {
                         <TouchableOpacity
                             key={index}
                             style={styles.menuItem}
-                            onPress={() => router.push(item.route)}
+                            onPress={() => {
+                                if (item?.id === 2) {
+                                    dispatch(setDoctorSpecialitiesPageTitle({ specializationName: "All Doctors", specializationID: null }))
+                                }
+                                router.push(item.route)
+                            }}
                         >
                             <MaterialCommunityIcons
                                 name={item.icon}
@@ -65,7 +71,6 @@ export default function DrawerLayout() {
                             <Text style={[styles.menuLabel, { color: colors.onSurface }]}>{item.label}</Text>
                         </TouchableOpacity>
                     ))}
-
                     {/* Dark Mode Toggle */}
                     <View style={styles.menuItem}>
                         <MaterialCommunityIcons

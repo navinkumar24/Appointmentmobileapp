@@ -30,7 +30,6 @@ export default function ShowDoctors() {
     (async () => {
       if (doctorSpecialitiesPageTitle) {
         await dispatch(fetchAllDoctorDropDown(selectedSpecialist?.entityBusinessID ?? doctorSpecialitiesPageTitle?.specializationID))
-        console.log("Fetched -- ", doctorSpecialitiesPageTitle)
       }
     })();
   }, [dispatch])
@@ -100,12 +99,6 @@ function DoctorCard({ doctor, colors, styles }: { doctor: any, colors: ColorThem
             <Text style={styles.metaText}>{doctor.rating?.toFixed(1) ?? "—"}</Text>
           </View>
         </View>
-      </View>
-
-      <View style={styles.actionsRow}>
-        <TouchableOpacity style={styles.viewBtn} activeOpacity={0.8} onPress={() => router.push("/screens/DoctorProfile")}>
-          <Text style={styles.viewBtnText}>View</Text>
-        </TouchableOpacity>
 
         <TouchableOpacity style={styles.bookBtn} activeOpacity={0.85} onPress={() => handleNavigateToBookingPage(doctor)}>
           <Ionicons name="calendar" size={16} color={colors.onPrimary} />
@@ -139,7 +132,9 @@ const dynamicStyles = (colors: ColorTheme) =>
       justifyContent: "space-between",
     },
     card: {
-      flex: 1,
+      width: "100%",
+      flexDirection: "row",
+      alignItems: "center",
       backgroundColor: colors.surface,
       borderRadius: 12,
       padding: 6,
@@ -149,7 +144,7 @@ const dynamicStyles = (colors: ColorTheme) =>
       shadowColor: "#000",
       shadowOpacity: 0.06,
       shadowRadius: 6,
-      minHeight: 100,
+      minHeight: 80,
       justifyContent: "space-between",
     },
     rowTop: {
@@ -158,15 +153,15 @@ const dynamicStyles = (colors: ColorTheme) =>
     },
 
     avatar: {
-      width: 50,
-      height: 50,
+      width: 60,
+      height: 60,
       borderRadius: 12,
       marginRight: 12,
       backgroundColor: colors.surfaceVariant,
     },
     avatarFallback: {
-      width: 50,
-      height: 50,
+      width: 60,
+      height: 60,
       borderRadius: 12,
       marginRight: 12,
       alignItems: "center",
@@ -199,13 +194,6 @@ const dynamicStyles = (colors: ColorTheme) =>
       marginLeft: 6,
       fontSize: 12,
       color: colors.onSurfaceVariant,
-    },
-
-    actionsRow: {
-      marginTop: 12,
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "space-between",
     },
 
     viewBtn: {

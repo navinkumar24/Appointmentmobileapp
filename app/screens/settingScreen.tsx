@@ -1,5 +1,5 @@
-// SettingScreen.tsx
-import React, { useEffect, useState } from "react";
+// screens/settingScreen.tsx
+import React, { useCallback, useMemo, useRef, useState } from "react";
 import {
     View,
     Text,
@@ -7,9 +7,7 @@ import {
     Switch,
     TouchableOpacity,
     ScrollView,
-    Modal,
-    FlatList,
-    Pressable,
+    Platform,
 } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import useColorSchemes from "@/app/themes/ColorSchemes";
@@ -19,218 +17,161 @@ import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "../store/store";
 import useColorsList from "../themes/ColorsList";
 import { setThemeColorsIndex, toggleTheme } from "../store/themeSlice";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import {
+    BottomSheetModal,
+    BottomSheetBackdrop,
+    BottomSheetModalProvider,
+    BottomSheetView,
+} from "@gorhom/bottom-sheet";
+import { useRouter } from "expo-router";
 
-type ThemeOption = {
-    key: string;
-    name: string;
-    description?: string;
-    colors: {
-        primary: string;
-        secondary: string;
-        surface: string;
-        onPrimary: string;
-        onSurface: string;
-    };
-};
-
-const THEME_OPTIONS: ThemeOption[] = [
-    {
-        key: "blue",
-        name: "Blue Theme",
-        description: "Professional & calm",
-        colors: {
-            primary: "#1565C0",
-            secondary: "#0288D1",
-            surface: "#FFFFFF",
-            onPrimary: "#FFFFFF",
-            onSurface: "#1F2937",
-        },
-    },
-    {
-        key: "purple",
-        name: "Purple Theme",
-        description: "Premium & modern",
-        colors: {
-            primary: "#6A1B9A",
-            secondary: "#8E24AA",
-            surface: "#FFFFFF",
-            onPrimary: "#FFFFFF",
-            onSurface: "#111827",
-        },
-    },
-    {
-        key: "green",
-        name: "Green Theme",
-        description: "Fresh & trustworthy",
-        colors: {
-            primary: "#2E7D32",
-            secondary: "#43A047",
-            surface: "#FFFFFF",
-            onPrimary: "#FFFFFF",
-            onSurface: "#0F172A",
-        },
-    },
-    {
-        key: "lavender",
-        name: "Lavender Theme",
-        description: "Soft & gentle",
-        colors: {
-            primary: "#7C4DFF",
-            secondary: "#B388FF",
-            surface: "#FFFFFF",
-            onPrimary: "#FFFFFF",
-            onSurface: "#111827",
-        },
-    },
-    {
-        key: "brown",
-        name: "Brown Theme",
-        description: "Warm & grounded",
-        colors: {
-            primary: "#6D4C41",
-            secondary: "#8D6E63",
-            surface: "#FFFFFF",
-            onPrimary: "#FFFFFF",
-            onSurface: "#1F2937",
-        },
-    },
-];
-
-const SettingScreen = () => {
+const SettingScreen: React.FC = () => {
     const colors = useColorSchemes();
     const styles = dynamicStyles(colors);
+    const insets = useSafeAreaInsets();
+    const dispatch = useDispatch<AppDispatch>();
+    const colorList = useColorsList() ?? [];
+    const { themeColorsIndex, mode } = useSelector((state: RootState) => state.theme);
+    // local toggles (for demo; wire to store if required)
     const [pushNotif, setPushNotif] = useState(true);
     const [emailNotif, setEmailNotif] = useState(false);
-    const [darkMode, setDarkMode] = useState(false);
-    const insets = useSafeAreaInsets();
-    // Theme picker state
-    const [themeModalVisible, setThemeModalVisible] = useState(false);
-    const [selectedThemeKey, setSelectedThemeKey] = useState<string | null>(null);
-    const { themeColorsIndex, mode } = useSelector((state: RootState) => state.theme);
-    const dispatch = useDispatch<AppDispatch>();
-    const colorList = useColorsList();
-
-    useEffect(() => {
-        if (!selectedThemeKey) return;
-        const theme = THEME_OPTIONS.find((t) => t.key === selectedThemeKey);
-        if (!theme) return;
-
-    }, [selectedThemeKey]);
-    // convenience accessor for preview
-    const selectedTheme = THEME_OPTIONS.find((t) => t.key === selectedThemeKey);
+    const bottomSheetRef = useRef<BottomSheetModal>(null);
+    const snapPoints = useMemo(() => ["60%", "80%"], []);
+    const openBottomSheet = useCallback(() => {
+        bottomSheetRef.current?.present();
+    }, []);
+    const previewPrimary = colorList?.find((c) => c.id === themeColorsIndex)?.colorTheme?.primary ?? colors.primary;
 
     return (
-        <>
-            <ScrollView
-                contentContainerStyle={{ paddingBottom: insets.bottom + 30 }}
-                style={styles.screen}
-                showsVerticalScrollIndicator={false}
-            >
-                {/* ACCOUNT SECTION */}
-                <Text style={styles.sectionTitle}>Account</Text>
-                <View style={styles.card}>
-                    <SettingItem icon="person-circle-outline" label="Profile" />
-                    <SettingItem icon="key-outline" label="Change Password" />
-                    <SettingItem icon="shield-checkmark-outline" label="Security" />
-                </View>
+        <GestureHandlerRootView style={{ flex: 1 }}>
+            <BottomSheetModalProvider>
+                <ScrollView
+                    contentContainerStyle={{ paddingBottom: insets.bottom + 28 }}
+                    style={styles.screen}
+                    showsVerticalScrollIndicator={false}
+                >
+                    {/* ACCOUNT */}
+                    <Text style={styles.sectionTitle}>Account</Text>
+                    <View style={styles.card}>
+                        <SettingRow icon="person-circle-outline" label="Profile"  route={"/(drawer)/(tabs)/profile"} />
+                        <SettingRow icon="key-outline" label="Change Password"  route={"/(drawer)/(tabs)/home"}/>
+                        <SettingRow icon="shield-checkmark-outline" label="Security" route={"/(drawer)/(tabs)/home"} />
+                    </View>
 
-                {/* NOTIFICATION SECTION */}
-                <Text style={styles.sectionTitle}>Notifications</Text>
-                <View style={styles.card}>
-                    <SwitchItem
-                        icon="notifications-outline"
-                        label="Push Notifications"
-                        value={pushNotif}
-                        onChange={setPushNotif}
-                    />
-                    <SwitchItem
-                        icon="mail-outline"
-                        label="Email Alerts"
-                        value={emailNotif}
-                        onChange={setEmailNotif}
-                    />
-                </View>
-
-                {/* APPEARANCE SECTION */}
-                <Text style={styles.sectionTitle}>Appearance</Text>
-                <View style={styles.card}>
-                    <SwitchItem icon="moon-outline" label="Dark Mode" value={mode === "dark"} onChange={() => dispatch(toggleTheme())} />
-
-                    <TouchableOpacity
-                        style={styles.settingRowActive}
-                        activeOpacity={0.8}
-                        onPress={() => setThemeModalVisible(true)}
-                    >
-                        <Ionicons name="color-palette-outline" size={22} color={colors.primary} />
-                        <View style={{ marginLeft: 12, flex: 1 }}>
-                            <Text style={styles.itemLabel}>Primary Color</Text>
-                            <Text style={styles.colorDescription}>Tap to choose app color</Text>
-                        </View>
-
-                        <View
-                            style={{
-                                width: 28,
-                                height: 28,
-                                borderRadius: 8,
-                                backgroundColor: selectedTheme ? selectedTheme.colors.primary : colors.primary,
-                                borderWidth: 1,
-                                borderColor: "#00000010",
-                            }}
+                    {/* NOTIFICATIONS */}
+                    <Text style={styles.sectionTitle}>Notifications</Text>
+                    <View style={styles.card}>
+                        <SwitchRow
+                            icon="notifications-outline"
+                            label="Push Notifications"
+                            value={pushNotif}
+                            onValueChange={setPushNotif}
                         />
+                        <SwitchRow
+                            icon="mail-outline"
+                            label="Email Alerts"
+                            value={emailNotif}
+                            onValueChange={setEmailNotif}
+                        />
+                    </View>
+
+                    {/* APPEARANCE */}
+                    <Text style={styles.sectionTitle}>Appearance</Text>
+                    <View style={styles.card}>
+                        <SwitchRow
+                            icon="moon-outline"
+                            label="Dark Mode"
+                            value={mode === "dark"}
+                            onValueChange={() => dispatch(toggleTheme())}
+                        />
+
+                        <TouchableOpacity
+                            style={styles.settingRowActive}
+                            activeOpacity={0.85}
+                            onPress={openBottomSheet}
+                        >
+                            <Ionicons name="color-palette-outline" size={22} color={colors.primary} />
+                            <View style={{ marginLeft: 12, flex: 1 }}>
+                                <Text style={styles.itemLabel}>Primary Color</Text>
+                                <Text style={styles.colorDescription}>Tap to choose app color</Text>
+                            </View>
+
+                            <View
+                                style={[
+                                    styles.colorPreview,
+                                    { backgroundColor: previewPrimary, borderColor: "#00000010" },
+                                ]}
+                            />
+                        </TouchableOpacity>
+                    </View>
+
+                    {/* HELP & ABOUT */}
+                    <Text style={styles.sectionTitle}>Help & About</Text>
+                    <View style={styles.card}>
+                        <SettingRow icon="help-circle-outline" label="Help Center" route={"/(drawer)/(tabs)/profile"} />
+                        <SettingRow icon="document-text-outline" label="Terms & Conditions" route={"/(drawer)/(tabs)/home"} />
+                        <SettingRow icon="information-circle-outline" label="About App" route={"/(drawer)/(tabs)/home"} />
+                    </View>
+
+                    {/* LOGOUT */}
+                    <TouchableOpacity style={styles.logoutBtn} activeOpacity={0.85}>
+                        <Ionicons name="log-out-outline" size={20} color={colors.error} />
+                        <Text style={styles.logoutText}>Log Out</Text>
                     </TouchableOpacity>
-                </View>
+                </ScrollView>
 
-                {/* OTHER SETTINGS */}
-                <Text style={styles.sectionTitle}>Help & About</Text>
-                <View style={styles.card}>
-                    <SettingItem icon="help-circle-outline" label="Help Center" />
-                    <SettingItem icon="document-text-outline" label="Terms & Conditions" />
-                    <SettingItem icon="information-circle-outline" label="About App" />
-                </View>
+                {/* ---------------------------
+            BottomSheetModal (Theme Picker)
+           --------------------------- */}
+                <BottomSheetModal
+                    ref={bottomSheetRef}
+                    index={0}
+                    snapPoints={snapPoints}
+                    backdropComponent={(props) => (
+                        <BottomSheetBackdrop {...props} appearsOnIndex={0} disappearsOnIndex={-1} />
+                    )}
+                    backgroundStyle={{ backgroundColor: colors.surface }}
+                    handleIndicatorStyle={{ backgroundColor: colors.onSurfaceVariant }}
+                >
+                    <BottomSheetView style={styles.sheetContainer}>
+                        <Text style={[styles.sheetTitle, { color: colors.onSurface }]}>Choose app color</Text>
+                        <Text style={[styles.sheetSubtitle, { color: colors.onSurfaceVariant }]}>
+                            Select a primary color combination for the app
+                        </Text>
 
-                {/* LOGOUT */}
-                <TouchableOpacity style={styles.logoutBtn} activeOpacity={0.8}>
-                    <Ionicons name="log-out-outline" size={22} color={colors.error} />
-                    <Text style={styles.logoutText}>Log Out</Text>
-                </TouchableOpacity>
-            </ScrollView>
+                        <View style={{ height: 12 }} />
 
-            {/* THEME SELECTION MODAL */}
-            <Modal visible={themeModalVisible} animationType="slide" transparent>
-                <Pressable style={styles.modalBackdrop} onPress={() => setThemeModalVisible(false)}>
-                    <View style={[styles.modalSheet, { backgroundColor: colors.surface }]}>
-                        <View style={styles.modalHeader}>
-                            <Text style={[styles.modalTitle, { color: colors.onSurface }]}>Choose app color</Text>
-                            <Text style={[styles.modalSubtitle, { color: colors.onSurfaceVariant }]}>
-                                Pick a primary color combination
-                            </Text>
-                        </View>
-                        {
-                            colorList?.map((item) => {
-                                const selected = item.id == themeColorsIndex;
+                        {colorList.length === 0 ? (
+                            <Text style={{ color: colors.onSurfaceVariant, marginTop: 8 }}>No themes available</Text>
+                        ) : (
+                            colorList.map((item) => {
+                                const selected = item.id === themeColorsIndex;
                                 return (
                                     <TouchableOpacity
-                                        key={item?.id}
-                                        activeOpacity={0.8}
-                                        onPress={() => dispatch(setThemeColorsIndex(item?.id))}
+                                        key={item.id}
+                                        activeOpacity={0.85}
+                                        onPress={() => dispatch(setThemeColorsIndex(item.id))}
                                         style={[
                                             styles.themeCard,
-                                            selected && { borderColor: colors.primary, borderWidth: 1.5 },
+                                            selected && { borderColor: colors.primary, borderWidth: 1.6 },
                                         ]}
                                     >
-                                        {/* left: swatches */}
                                         <View style={styles.swatches}>
                                             <View style={[styles.swatch, { backgroundColor: item.colorTheme.primary }]} />
                                             <View style={[styles.swatch, { backgroundColor: item.colorTheme.secondary }]} />
-                                            <View style={[styles.swatch, { backgroundColor: item.colorTheme.surface, borderWidth: 0.6, borderColor: "#00000010" }]} />
+                                            <View
+                                                style={[
+                                                    styles.swatch,
+                                                    { backgroundColor: item.colorTheme.primaryContainer, borderWidth: 0.6, borderColor: "#00000008" },
+                                                ]}
+                                            />
                                         </View>
 
-                                        {/* center: name & description */}
-                                        <View style={{ flex: 1, marginLeft: 12 }}>
+                                        <View style={{ flex: 1 }}>
                                             <Text style={[styles.themeName, { color: colors.onSurface }]}>{item.name}</Text>
                                         </View>
 
-                                        {/* right: radio/select */}
                                         <View style={styles.radioWrap}>
                                             {selected ? (
                                                 <View style={[styles.radioOuter, { borderColor: colors.primary }]}>
@@ -241,147 +182,168 @@ const SettingScreen = () => {
                                             )}
                                         </View>
                                     </TouchableOpacity>
-                                )
+                                );
                             })
-                        }
-                    </View>
-                </Pressable>
-            </Modal>
-        </>
+                        )}
+                    </BottomSheetView>
+                </BottomSheetModal>
+            </BottomSheetModalProvider>
+        </GestureHandlerRootView>
     );
 };
 
 export default SettingScreen;
 
-/* ---------------- SETTINGS ROW COMPONENTS ---------------- */
+/* -------------------------
+   Helper row components
+   ------------------------- */
 
-const SettingItem = ({ icon, label }: any) => {
+const SettingRow = ({ icon, label, route }: { icon: any; label: string, route: string | any }) => {
+    const router = useRouter();
     const colors = useColorSchemes();
     return (
-        <TouchableOpacity style={stylesForItem.row} activeOpacity={0.7}>
-            <Ionicons name={icon} size={22} color={colors.primary} />
+        <TouchableOpacity style={stylesForItem.row} activeOpacity={0.75} onPress={() => router.push(route)}>
+            <Ionicons name={icon} size={20} color={colors.primary} />
             <Text style={[stylesForItem.label, { color: colors.onSurface }]}>{label}</Text>
-            <Ionicons name="chevron-forward" size={20} color={colors.onSurfaceVariant} />
+            <Ionicons name="chevron-forward" size={18} color={colors.onSurfaceVariant} />
         </TouchableOpacity>
     );
 };
 
-const SwitchItem = ({ icon, label, value, onChange }: any) => {
+const SwitchRow = ({ icon, label, value, onValueChange }: any) => {
     const colors = useColorSchemes();
-
     return (
         <View style={stylesForItem.row}>
-            <Ionicons name={icon} size={22} color={colors.primary} />
+            <Ionicons name={icon} size={20} color={colors.primary} />
             <Text style={[stylesForItem.label, { color: colors.onSurface }]}>{label}</Text>
             <Switch
                 value={value}
-                onValueChange={onChange}
-                trackColor={{
-                    false: colors.outline || "#ccc",
-                    true: colors.primary,
-                }}
-                thumbColor={value ? colors.onPrimary : colors.surfaceVariant}
+                onValueChange={onValueChange}
+                trackColor={{ false: colors.surfaceVariant || "#ccc", true: colors.primary }}
+                thumbColor={value ? colors.onPrimary : colors.surface}
             />
         </View>
     );
 };
 
-/* ---------------- STYLES ---------------- */
+/* -------------------------
+   Styles (dynamic + static)
+   ------------------------- */
 
 const dynamicStyles = (colors: ColorTheme) =>
     StyleSheet.create({
         screen: {
             flex: 1,
             backgroundColor: colors.background,
-            padding: 16,
+            paddingHorizontal: 16,
         },
         header: {
-            fontSize: 26,
+            fontSize: 28,
             fontWeight: "700",
             color: colors.onBackground,
+            marginTop: 18,
             marginBottom: 12,
         },
+
         sectionTitle: {
-            fontSize: 16,
+            fontSize: 15,
             fontWeight: "600",
             color: colors.onSurfaceVariant,
-            marginTop: 5,
+            marginTop: 10,
             marginBottom: 8,
         },
+
         card: {
             backgroundColor: colors.surface,
             borderRadius: 14,
-            paddingVertical: 4,
+            paddingVertical: 6,
+            paddingHorizontal: 6,
+            marginBottom: 12,
             elevation: 2,
             shadowColor: "#000",
             shadowOpacity: 0.06,
-            shadowRadius: 4,
+            shadowRadius: 6,
+            shadowOffset: { width: 0, height: 2 },
         },
+
         settingRowActive: {
             flexDirection: "row",
             alignItems: "center",
-            paddingVertical: 14,
-            paddingHorizontal: 14,
+            paddingVertical: 12,
+            paddingHorizontal: 12,
         },
+
+        itemLabel: {
+            fontSize: 16,
+            fontWeight: "600",
+        },
+        colorDescription: {
+            fontSize: 13,
+            marginTop: 2,
+        },
+
+        colorPreview: {
+            width: 28,
+            height: 28,
+            borderRadius: 8,
+            borderWidth: Platform.OS === "ios" ? 0.5 : 1,
+            borderColor: "#00000010",
+        },
+
         logoutBtn: {
-            marginTop: 30,
-            paddingVertical: 14,
-            backgroundColor: `${colors.error}15`,
-            flexDirection: "row",
-            justifyContent: "center",
-            alignItems: "center",
+            marginTop: 20,
+            paddingVertical: 12,
+            backgroundColor: `${colors.error}14`,
             borderRadius: 12,
+            alignItems: "center",
+            justifyContent: "center",
+            flexDirection: "row",
         },
         logoutText: {
             color: colors.error,
-            fontSize: 16,
-            fontWeight: "600",
             marginLeft: 10,
+            fontSize: 15,
+            fontWeight: "700",
         },
 
-        /* modal */
-        modalBackdrop: {
-            flex: 1,
-            backgroundColor: "#00000055",
-            justifyContent: "flex-end",
-        },
-        modalSheet: {
-            borderTopLeftRadius: 16,
-            borderTopRightRadius: 16,
+        /* bottom sheet */
+        sheetContainer: {
             paddingHorizontal: 16,
-            paddingTop: 16,
-            maxHeight: "70%",
+            paddingTop: 12,
+            paddingBottom: 28,
+            minHeight: 180,
         },
-        modalHeader: {
-            marginBottom: 12,
-        },
-        modalTitle: {
+        sheetTitle: {
             fontSize: 18,
             fontWeight: "700",
         },
-        modalSubtitle: {
+        sheetSubtitle: {
             fontSize: 13,
-            marginTop: 4,
+            marginTop: 6,
         },
+
         themeCard: {
             flexDirection: "row",
             alignItems: "center",
             padding: 10,
-            borderRadius: 12,
+            borderRadius: 10,
             backgroundColor: "transparent",
+            marginBottom: 8,
         },
+
         swatches: {
-            flexDirection: "column",
+            width: 72,
             alignItems: "center",
             justifyContent: "center",
-            width: 64,
+            marginRight: 12,
         },
         swatch: {
-            width: 44,
+            width: 52,
             height: 18,
             borderRadius: 6,
             marginBottom: 6,
         },
+
         themeName: {
             fontSize: 16,
             fontWeight: "700",
@@ -390,8 +352,9 @@ const dynamicStyles = (colors: ColorTheme) =>
             fontSize: 13,
             marginTop: 4,
         },
+
         radioWrap: {
-            width: 48,
+            width: 44,
             alignItems: "center",
             justifyContent: "center",
         },
@@ -408,32 +371,6 @@ const dynamicStyles = (colors: ColorTheme) =>
             width: 12,
             height: 12,
             borderRadius: 6,
-        },
-        modalActions: {
-            flexDirection: "row",
-            justifyContent: "space-between",
-            marginTop: 12,
-            paddingBottom: 18,
-        },
-        modalBtn: {
-            paddingVertical: 12,
-            paddingHorizontal: 18,
-            borderRadius: 10,
-            minWidth: 120,
-            alignItems: "center",
-            justifyContent: "center",
-        },
-
-        /* re-used item styles */
-        itemLabel: {
-            fontSize: 16,
-            fontWeight: "600",
-            color: colors.onSurface
-        },
-        colorDescription: {
-            fontSize: 13,
-            marginTop: 2,
-            color: colors.onSurface
         },
     });
 

@@ -1,6 +1,9 @@
 
 import { Button, Text, View } from "react-native";
 import { Redirect, useRouter } from "expo-router";
+import 'react-native-gesture-handler';
+import 'react-native-reanimated';
+import 'expo-router/entry';
 
 export default function Index() {
   const router = useRouter()

@@ -3,7 +3,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { Provider } from "react-redux";
 import { store } from "./store/store";
 import ThemedLayoutWrapper from "./ThemedLayoutWrapper";
-import 'react-native-gesture-handler';
+
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 
@@ -19,5 +19,6 @@ export default function RootLayout() {
         </SafeAreaProvider>
       </BottomSheetModalProvider>
     </GestureHandlerRootView>
+
   );
 }

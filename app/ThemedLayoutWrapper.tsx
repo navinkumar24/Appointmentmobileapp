@@ -3,6 +3,8 @@ import useColorSchemes from "./themes/ColorSchemes";
 import { useSelector } from "react-redux";
 import { RootState } from "./store/store";
 
+
+
 function ThemedLayoutWrapper() {
   const colors = useColorSchemes();
   const { doctorSpecialitiesPageTitle } = useSelector((state: RootState) => state.utils);
