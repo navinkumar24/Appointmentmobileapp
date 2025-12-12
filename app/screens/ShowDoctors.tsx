@@ -1,116 +1,81 @@
 // ShowDoctors.tsx
-import React, { useCallback, useMemo } from "react";
+import React, { useEffect, useMemo } from "react";
 import {
   View,
   Text,
   StyleSheet,
   Image,
-  FlatList,
   TouchableOpacity,
-  useWindowDimensions,
+  ScrollView,
 } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import useColorSchemes from "@/app/themes/ColorSchemes";
 import { ColorTheme } from "@/app/types/ColorTheme";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "../store/store";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useRouter } from "expo-router";
+import { fetchAllDoctorDropDown, setSelectedDoctor } from "../store/appointmentBookingSlice";
 
-type Doctor = {
-  id: string | number;
-  name: string;
-  specialization: string;
-  experienceYears?: number;
-  avatar?: string | null;
-  rating?: number;
-};
-
-const SAMPLE_DATA: Doctor[] = [
-  {
-    id: "1",
-    name: "Dr. Asha Mehra",
-    specialization: "Cardiology",
-    experienceYears: 12,
-    avatar: null,
-    rating: 4.8,
-  },
-  {
-    id: "2",
-    name: "Dr. Rohit Verma",
-    specialization: "Dermatology",
-    experienceYears: 8,
-    avatar: "https://i.pravatar.cc/150?img=12",
-    rating: 4.6,
-  },
-  {
-    id: "3",
-    name: "Dr. Priya Gupta",
-    specialization: "Pediatrics",
-    experienceYears: 6,
-    avatar: null,
-    rating: 4.9,
-  },
-  {
-    id: "4",
-    name: "Dr. Aman Singh",
-    specialization: "Orthopedics",
-    experienceYears: 15,
-    avatar: "https://i.pravatar.cc/150?img=5",
-    rating: 4.7,
-  },
-];
 
 export default function ShowDoctors() {
   const colors = useColorSchemes();
   const styles = dynamicStyles(colors);
-  const data = SAMPLE_DATA;
+  const { allDoctors } = useSelector((state: RootState) => state.appointmentBooking);
+  const { doctorSpecialitiesPageTitle, selectedSpecialist } = useSelector((state: RootState) => state.utils)
+  const insets = useSafeAreaInsets();
+  const dispatch = useDispatch<AppDispatch>()
 
-  const { width } = useWindowDimensions();
-  const numColumns = width > 800 ? 3 : width > 500 ? 2 : 1; // responsive columns
-
-  const renderItem = useCallback(
-    ({ item }: { item: Doctor }) => <DoctorCard doctor={item} colors={colors} styles={styles} />,
-    [colors, styles]
-  );
+  useEffect(() => {
+    (async () => {
+      if (doctorSpecialitiesPageTitle) {
+        await dispatch(fetchAllDoctorDropDown(selectedSpecialist?.entityBusinessID ?? doctorSpecialitiesPageTitle?.specializationID))
+        console.log("Fetched -- ", doctorSpecialitiesPageTitle)
+      }
+    })();
+  }, [dispatch])
 
   return (
-    <View style={styles.screen}>
+    <ScrollView
+      style={styles.screen}
+      contentContainerStyle={{ paddingBottom: insets.bottom + 30 }}
+    >
       <Text style={styles.headerTitle}>Our Doctors</Text>
-
-      <FlatList
-        data={data}
-        keyExtractor={(it) => String(it.id)}
-        renderItem={renderItem}
-        numColumns={numColumns}
-        columnWrapperStyle={numColumns > 1 ? styles.row : undefined}
-        contentContainerStyle={styles.listContent}
-        showsVerticalScrollIndicator={false}
-      />
-    </View>
+      {
+        allDoctors?.map((item) => (
+          <DoctorCard key={item?.entityID} doctor={item} colors={colors} styles={styles} />
+        ))
+      }
+      {!allDoctors?.length && <View style={styles.emptyContainer}>
+        <Text>No Doctor Available</Text>
+      </View>}
+    </ScrollView>
   );
 }
 
 /* ---------------- Doctor Card Component ---------------- */
-function DoctorCard({
-  doctor,
-  colors,
-  styles,
-}: {
-  doctor: Doctor;
-  colors: ColorTheme;
-  styles: ReturnType<typeof dynamicStyles>;
-}) {
+function DoctorCard({ doctor, colors, styles }: { doctor: any, colors: ColorTheme, styles: ReturnType<typeof dynamicStyles> }) {
+  const router = useRouter();
+  const dispatch = useDispatch<AppDispatch>();
   const initials = useMemo(() => {
-    return doctor.name
-      .split(" ")
-      .map((p) => p[0])
-      .slice(0, 2)
-      .join("")
-      .toUpperCase();
-  }, [doctor.name]);
+    return doctor.entityBusinessName
+      ?.split(" ")
+      ?.map((p: any) => p[0])
+      ?.slice(0, 2)
+      ?.join("")
+      ?.toUpperCase();
+  }, [doctor.entityBusinessName]);
+
+  const handleNavigateToBookingPage = async (doctor: any) => {
+    await dispatch(setSelectedDoctor(doctor));
+    router.push("/screens/BookAppointment")
+  }
 
   return (
     <View style={styles.card}>
       <View style={styles.rowTop}>
-        {doctor.avatar ? (
-          <Image source={{ uri: doctor.avatar }} style={styles.avatar} />
+        {doctor?.avatar ? (
+          <Image source={{ uri: doctor?.avatar }} style={styles.avatar} />
         ) : (
           <View style={[styles.avatarFallback, { backgroundColor: colors.primaryContainer }]}>
             <Text style={[styles.avatarInitial, { color: colors.onPrimaryContainer }]}>{initials}</Text>
@@ -119,10 +84,10 @@ function DoctorCard({
 
         <View style={styles.info}>
           <Text style={styles.name} numberOfLines={2}>
-            {doctor.name}
+            {doctor?.entityBusinessName}
           </Text>
           <Text style={styles.specialization} numberOfLines={1}>
-            {doctor.specialization}
+            {doctor.specializationName}
           </Text>
 
           <View style={styles.metaRow}>
@@ -138,11 +103,11 @@ function DoctorCard({
       </View>
 
       <View style={styles.actionsRow}>
-        <TouchableOpacity style={styles.viewBtn} activeOpacity={0.8}>
+        <TouchableOpacity style={styles.viewBtn} activeOpacity={0.8} onPress={() => router.push("/screens/DoctorProfile")}>
           <Text style={styles.viewBtnText}>View</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.bookBtn} activeOpacity={0.85}>
+        <TouchableOpacity style={styles.bookBtn} activeOpacity={0.85} onPress={() => handleNavigateToBookingPage(doctor)}>
           <Ionicons name="calendar" size={16} color={colors.onPrimary} />
           <Text style={styles.bookBtnText}>Book</Text>
         </TouchableOpacity>
@@ -157,13 +122,14 @@ const dynamicStyles = (colors: ColorTheme) =>
     screen: {
       flex: 1,
       backgroundColor: colors.background,
-      padding: 16,
+      paddingHorizontal: 6,
     },
     headerTitle: {
       fontSize: 18,
       fontWeight: "700",
       color: colors.primary,
       marginBottom: 12,
+      marginTop: 10
     },
     listContent: {
       paddingBottom: 24,
@@ -172,19 +138,18 @@ const dynamicStyles = (colors: ColorTheme) =>
     row: {
       justifyContent: "space-between",
     },
-
     card: {
       flex: 1,
       backgroundColor: colors.surface,
       borderRadius: 12,
-      padding: 12,
+      padding: 6,
       marginBottom: 12,
-      marginHorizontal: 6,
+      margin: 1,
       elevation: 2,
       shadowColor: "#000",
       shadowOpacity: 0.06,
       shadowRadius: 6,
-      minHeight: 120,
+      minHeight: 100,
       justifyContent: "space-between",
     },
     rowTop: {
@@ -193,15 +158,15 @@ const dynamicStyles = (colors: ColorTheme) =>
     },
 
     avatar: {
-      width: 72,
-      height: 72,
+      width: 50,
+      height: 50,
       borderRadius: 12,
       marginRight: 12,
       backgroundColor: colors.surfaceVariant,
     },
     avatarFallback: {
-      width: 72,
-      height: 72,
+      width: 50,
+      height: 50,
       borderRadius: 12,
       marginRight: 12,
       alignItems: "center",
@@ -223,8 +188,8 @@ const dynamicStyles = (colors: ColorTheme) =>
     specialization: {
       fontSize: 13,
       color: colors.onSurfaceVariant,
-      marginTop: 4,
-      marginBottom: 6,
+      marginTop: 1,
+      marginBottom: 1,
     },
     metaRow: {
       flexDirection: "row",
@@ -244,9 +209,9 @@ const dynamicStyles = (colors: ColorTheme) =>
     },
 
     viewBtn: {
-      paddingVertical: 8,
-      paddingHorizontal: 14,
-      borderRadius: 8,
+      paddingVertical: 6,
+      paddingHorizontal: 8,
+      borderRadius: 4,
       backgroundColor: colors.surfaceVariant,
     },
     viewBtnText: {
@@ -257,9 +222,9 @@ const dynamicStyles = (colors: ColorTheme) =>
     bookBtn: {
       flexDirection: "row",
       alignItems: "center",
-      paddingVertical: 8,
-      paddingHorizontal: 14,
-      borderRadius: 8,
+      paddingVertical: 6,
+      paddingHorizontal: 8,
+      borderRadius: 4,
       backgroundColor: colors.primary,
     },
     bookBtnText: {
@@ -267,4 +232,10 @@ const dynamicStyles = (colors: ColorTheme) =>
       fontWeight: "700",
       marginLeft: 8,
     },
+    emptyContainer: {
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between",
+      marginTop: 50
+    }
   });

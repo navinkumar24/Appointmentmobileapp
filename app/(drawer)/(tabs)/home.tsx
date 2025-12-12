@@ -9,7 +9,7 @@ import { AppDispatch, RootState } from '@/app/store/store';
 import { fetchAllSpecializations } from '@/app/store/homeSlice';
 import getStoredValues from '@/app/utils/getStoredValues';
 import { SvgUri } from 'react-native-svg';
-import { setDoctorSpecialitiesPageTitle } from '@/app/store/utilsSlice';
+import { setDoctorSpecialitiesPageTitle, setSelectedSpecialist } from '@/app/store/utilsSlice';
 
 
 export default function Home() {
@@ -86,7 +86,11 @@ export default function Home() {
                   key={item.entityID}
                   style={styles.specialitiesItemCard}
                   activeOpacity={0.8}
-                  onPress={() => { dispatch(setDoctorSpecialitiesPageTitle(item?.entityBusinessName)), router.push("/screens/ShowDoctors") }}
+                  onPress={() => {
+                    dispatch(setDoctorSpecialitiesPageTitle({ specializationName: item?.entityBusinessName, specializationID: item?.entityBusinessID })),
+                      dispatch(setSelectedSpecialist(item)),
+                      router.push("/screens/ShowDoctors")
+                  }}
                 >
                   {iconUrl && !isImgErrExist ? (
                     <SvgUri

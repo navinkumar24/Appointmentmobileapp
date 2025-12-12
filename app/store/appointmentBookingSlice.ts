@@ -6,9 +6,9 @@ import { createAppointment, getAllDoctorDropDown, getAvailableSlots, getDoctorLe
 
 export const fetchAllDoctorDropDown = createAsyncThunk(
     'home/fetchAllDoctorDropDown',
-    async (_, { rejectWithValue }) => {
+    async (specialization, { rejectWithValue }) => {
         try {
-            const response = getAllDoctorDropDown();
+            const response = getAllDoctorDropDown(specialization);
             return response;
         } catch (err) {
             const error = err as AxiosError<any>
@@ -57,6 +57,7 @@ type InitialState = {
     allDoctors: any[];
     doctorLeaves: any[];
     allAvailableSlots: any[];
+    selectedDoctor: any | null,
     loading: boolean;
     error: string | any
 }
@@ -65,6 +66,7 @@ const initialState: InitialState = {
     allDoctors: [],
     doctorLeaves: [],
     allAvailableSlots: [],
+    selectedDoctor: null,
     loading: false,
     error: null,
 }
@@ -72,7 +74,11 @@ const initialState: InitialState = {
 export const appointmentBookingSlice = createSlice({
     name: 'appointmentBooking',
     initialState,
-    reducers: {},
+    reducers: {
+        setSelectedDoctor: (state, action) => {
+            state.selectedDoctor = action.payload
+        }
+    },
     extraReducers: (builder) => {
         builder
             .addCase(fetchAllDoctorDropDown.pending, (state) => {
@@ -111,5 +117,5 @@ export const appointmentBookingSlice = createSlice({
     }
 })
 
-
+export const { setSelectedDoctor } = appointmentBookingSlice.actions
 export default appointmentBookingSlice.reducer

@@ -3,14 +3,14 @@ import axios, { AxiosError } from "axios";
 import getStoredValues from "../utils/getStoredValues";
 import showToast from "../utils/showToast";
 
-export const getAllDoctorDropDown = async () => {
+export const getAllDoctorDropDown = async (specialization: any) => {
     const { token, baseUrl } = await getStoredValues();
     try {
         const response = await axios.post(`${baseUrl}/opd/doctor/getAllEntity`,
             {
                 "genericRequestEntity": {
                     "dropdown": 0,
-                    "specialization": null
+                    "specialization": specialization
                 }
             },
             {

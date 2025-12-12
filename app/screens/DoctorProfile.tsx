@@ -5,9 +5,6 @@ import Ionicons from '@expo/vector-icons/Ionicons'
 import useColorSchemes from '@/app/themes/ColorSchemes'
 import { ColorTheme } from '@/app/types/ColorTheme'
 
-// Profile screen — modern, professional layout
-// Notes: this component expects your project to provide `useColorSchemes` and `ColorTheme`.
-// Optional dependency: @expo/vector-icons (Ionicons) — install with `expo install @expo/vector-icons`.
 
 const DoctorProfile: React.FC = () => {
   const colors = useColorSchemes()

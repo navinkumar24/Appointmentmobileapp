@@ -16,7 +16,7 @@ const MENU_ITEMS = [
     { label: "My Appointment", icon: "calendar-month", route: "(tabs)/appointment" },
     { label: "My Reports", icon: "file-document-outline", route: "(tabs)/account" },
     { label: "Update Profile", icon: "account-edit-outline", route: "(tabs)/profile" },
-    { label: "Settings", icon: "cog-outline", route: "settings" },
+    { label: "Settings", icon: "cog-outline", route: "/screens/settingScreen" },
     { label: "Log Out", icon: "logout", route: "login" },
 ];
 

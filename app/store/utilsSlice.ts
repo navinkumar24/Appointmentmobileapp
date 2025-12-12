@@ -4,12 +4,14 @@ import { createSlice } from "@reduxjs/toolkit";
 
 
 type InitialState = {
-    doctorSpecialitiesPageTitle: string | any;
+    selectedSpecialist: any;
+    doctorSpecialitiesPageTitle: any;
     loading: boolean;
     error: string | any
 }
 
 const initialState: InitialState = {
+    selectedSpecialist: null,
     doctorSpecialitiesPageTitle: null,
     loading: false,
     error: null,
@@ -19,6 +21,9 @@ export const utilsSlice = createSlice({
     name: 'utils',
     initialState,
     reducers: {
+        setSelectedSpecialist: (state, action) => {
+            state.selectedSpecialist = action.payload
+        },
         setDoctorSpecialitiesPageTitle: (state, action) => {
             state.doctorSpecialitiesPageTitle = action.payload
         }
@@ -26,5 +31,5 @@ export const utilsSlice = createSlice({
     extraReducers: (builder) => { }
 })
 
-export const { setDoctorSpecialitiesPageTitle } = utilsSlice.actions
+export const { setSelectedSpecialist, setDoctorSpecialitiesPageTitle } = utilsSlice.actions
 export default utilsSlice.reducer

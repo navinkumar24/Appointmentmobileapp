@@ -12,42 +12,54 @@ import {
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import { useFocusEffect } from '@react-navigation/native';
 import useColorSchemes from "@/app/themes/ColorSchemes";
 import { ColorTheme } from "../types/ColorTheme";
 import ErrorCard from '../components/ErrorCard'
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "../store/store";
-import { creatingAppointment, fetchAllDoctorDropDown, fetchAvailableSlots, fetchDoctorLeaves } from "../store/appointmentBookingSlice";
+import { creatingAppointment, fetchAllDoctorDropDown, fetchAvailableSlots, fetchDoctorLeaves, setSelectedDoctor } from "../store/appointmentBookingSlice";
+import { setDoctorSpecialitiesPageTitle, setSelectedSpecialist } from "../store/utilsSlice";
 import dayjs from 'dayjs'
 import { useLeavesMessage } from "../utils/useLeavesMessage";
 
 export default function BookAppointment() {
   const colors = useColorSchemes();
   const styles = dynamicStyles(colors);
-  const { allDoctors, doctorLeaves, allAvailableSlots } = useSelector((state: RootState) => state.appointmentBooking);
+  const { allDoctors, doctorLeaves, allAvailableSlots, selectedDoctor } = useSelector((state: RootState) => state.appointmentBooking);
+  const { selectedSpecialist} = useSelector((state: RootState) => state.utils)
   const dispatch = useDispatch<AppDispatch>()
   // Select / search state
   const [query, setQuery] = useState("");
   const [modalVisible, setModalVisible] = useState<boolean>(false);
-  // Selected Doctor
-  const [selectedItem, setSelectedItem] = useState<any>(null);
   // Date picker state
   const [pickedDate, setPickedDate] = useState<any>(null);
   const [showDatePicker, setShowDatePicker] = useState<boolean>(false);
   const [selectedSlot, setSelectedSlot] = useState<any>(null);
 
+  useFocusEffect(
+    React.useCallback(() => {
+      return () => {
+        dispatch(setSelectedSpecialist(null));
+        dispatch(setSelectedDoctor(null));
+      };
+    }, [dispatch])
+  );
+
   useEffect(() => {
     (async () => {
-      await dispatch(fetchAllDoctorDropDown())
+      if (!selectedDoctor) {
+        await dispatch(fetchAllDoctorDropDown())
+      }
     })();
   }, [])
 
   useEffect(() => {
-    dispatch(fetchDoctorLeaves(selectedItem?.entityBusinessID))
-  }, [selectedItem])
+    dispatch(fetchDoctorLeaves(selectedDoctor?.entityBusinessID))
+  }, [selectedDoctor])
 
   useEffect(() => {
-    dispatch(fetchAvailableSlots({ doctorID: selectedItem?.entityBusinessID, appointmentDate: dayjs(pickedDate)?.format("DD-MM-YYYY") }))
+    dispatch(fetchAvailableSlots({ doctorID: selectedDoctor?.entityBusinessID, appointmentDate: dayjs(pickedDate)?.format("DD-MM-YYYY") }))
   }, [pickedDate])
 
   // Derived filtered list
@@ -62,13 +74,10 @@ export default function BookAppointment() {
     );
   }, [query, allDoctors]);
 
-
-
   const leaveMessage = useLeavesMessage(doctorLeaves ?? [], pickedDate ?? null);
 
-
   function onSelectItem(item: any) {
-    setSelectedItem(item);
+    dispatch(setSelectedDoctor(item))
     setModalVisible(false);
     Keyboard.dismiss();
   }
@@ -81,14 +90,11 @@ export default function BookAppointment() {
   }
 
   const handleSubmit = () => {
-    console.log("Selected Doctor -- ", selectedItem);
-    console.log("Selected Slots -- ", selectedSlot)
-    console.log("Picked Date -- ", pickedDate);
     const formData = {
       startTime: selectedSlot?.startTime,
       endTime: selectedSlot?.endTime,
       appointmentDate: dayjs(pickedDate)?.format("DD-MM-YYYY"),
-      doctorID: selectedItem?.entityBusinessID
+      doctorID: selectedDoctor?.entityBusinessID
     }
     dispatch(creatingAppointment(formData))
     setSelectedSlot(null)
@@ -106,8 +112,8 @@ export default function BookAppointment() {
           style={styles.selectInput}
           onPress={() => setModalVisible(true)}
         >
-          <Text style={selectedItem ? styles.selectTextValue : styles.selectTextPlaceholder}>
-            {selectedItem ? `${selectedItem?.entitySalutationName}. ${selectedItem.entityBusinessName} ${selectedItem?.specializationName ? "(" + selectedItem?.specializationName + ")" : ""}` : "search doctors..."}
+          <Text style={selectedDoctor ? styles.selectTextValue : styles.selectTextPlaceholder}>
+            {selectedDoctor ? `${selectedDoctor?.entitySalutationName}. ${selectedDoctor.entityBusinessName} ${selectedDoctor?.specializationName ? "(" + selectedDoctor?.specializationName + ")" : ""}` : "search doctors..."}
           </Text>
           <Ionicons name="chevron-down" size={20} color={colors.onSurfaceVariant} />
         </TouchableOpacity>
@@ -122,13 +128,13 @@ export default function BookAppointment() {
       </View>
 
       {/* Selected summary */}
-      {selectedItem && <View style={styles.summaryCard}>
+      {selectedDoctor && <View style={styles.summaryCard}>
         <Text style={styles.summaryLabel}>Selected</Text>
         <Text style={styles.summaryItem}>Dr. Name :
-          {selectedItem.entityBusinessName && <Text style={styles.summaryItemValue}> {`${selectedItem?.entitySalutationName ?? ""}. ${selectedItem.entityBusinessName}`}</Text>}
+          {selectedDoctor.entityBusinessName && <Text style={styles.summaryItemValue}> {`${selectedDoctor?.entitySalutationName ?? ""}. ${selectedDoctor.entityBusinessName}`}</Text>}
         </Text>
         <Text style={styles.summaryItem}>Specialities :
-          {selectedItem?.specializationName && <Text style={styles.summaryItemValue}>{" " + selectedItem?.specializationName}</Text>}
+          {selectedDoctor?.specializationName && <Text style={styles.summaryItemValue}>{" " + selectedDoctor?.specializationName}</Text>}
         </Text>
         <Text style={styles.summaryItem}>Date :
           <Text style={styles.summaryItemValue}> {pickedDate ? ` ${dayjs(pickedDate)?.format("DD-MM-YYYY")}` : "No selected"}</Text>
@@ -176,11 +182,11 @@ export default function BookAppointment() {
       {/* Book button */}
       <View style={styles.bookRow}>
         <TouchableOpacity
-          style={[styles.bookBtn, !(selectedItem && pickedDate && selectedSlot) && { opacity: 0.5 }]}
-          disabled={!(selectedItem && pickedDate && selectedSlot)}
+          style={[styles.bookBtn, !(selectedDoctor && pickedDate && selectedSlot) && { opacity: 0.5 }]}
+          disabled={!(selectedDoctor && pickedDate && selectedSlot)}
           onPress={handleSubmit}
         >
-          <Text style={styles.bookBtnText}>Proceed To Pay ₹ {selectedItem?.opdNewCharges}</Text>
+          <Text style={styles.bookBtnText}>Proceed To Pay ₹ {selectedDoctor?.opdNewCharges}</Text>
         </TouchableOpacity>
       </View>
 

@@ -15,13 +15,17 @@ function ThemedLayoutWrapper() {
       <Stack.Screen name="screens/SignupOtpScreen" options={{ headerShown: false }} />
       <Stack.Screen name="screens/SignupFormScreen" options={{ headerShown: false }} />
       <Stack.Screen name="screens/ForgotPassword" options={{ headerShown: false }} />
-      <Stack.Screen name="screens/BookAppointment" options={{
-        title: "Appointment Booking",
-        headerStyle: {
-          backgroundColor: colors.primaryContainer
-        },
-        headerTintColor: colors.onPrimaryContainer
-      }} />
+
+      <Stack.Screen
+        name="screens/BookAppointment"
+        options={{
+          title: "Appointment Booking",
+          headerStyle: {
+            backgroundColor: colors.primaryContainer
+          },
+          headerTintColor: colors.onPrimaryContainer
+        }}
+      />
       <Stack.Screen
         name="screens/ShowAllSpecialities"
         options={{
@@ -41,10 +45,26 @@ function ThemedLayoutWrapper() {
       <Stack.Screen
         name="screens/ShowDoctors"
         options={{
-          title: doctorSpecialitiesPageTitle,
+          title: doctorSpecialitiesPageTitle?.specializationName,
           headerStyle: { backgroundColor: colors.primaryContainer },
           headerTintColor: colors.onPrimaryContainer,
-        } }
+        }}
+      />
+      <Stack.Screen
+        name="screens/DoctorProfile"
+        options={{
+          title: "Doctor Profile",
+          headerStyle: { backgroundColor: colors.primaryContainer },
+          headerTintColor: colors.onPrimaryContainer,
+        }}
+      />
+      <Stack.Screen
+        name="screens/settingScreen"
+        options={{
+          title: "Setting",
+          headerStyle: { backgroundColor: colors.primaryContainer },
+          headerTintColor: colors.onPrimaryContainer,
+        }}
       />
 
       <Stack.Screen name="(drawer)" options={{ headerShown: false }} />
