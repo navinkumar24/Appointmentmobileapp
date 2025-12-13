@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   StyleSheet,
   Text,
@@ -15,35 +15,54 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import useColorSchemes from "@/themes/ColorSchemes";
-import { OTPWidget } from '@msg91comm/sendotp-react-native';
+import { OTPWidget } from "@msg91comm/sendotp-sdk";
+import getenvValues from "@/utils/getenvValues";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "@/store/store";
+import { setMessage, setMobileNumber } from "@/store/authSlice";
+import showToast from "@/utils/showToast";
 
 export default function Login() {
   const colors = useColorSchemes();
   const router = useRouter();
-  const [mobileNumber, setMobileNumber] = useState("");
+  const dispatch = useDispatch<AppDispatch>();
+  const { mobileNumber } = useSelector((state: RootState) => state.auth)
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loginUsingPassword, setLoginUsingPassword] = useState(false);
+  const { widgetId, tokenAuth } = getenvValues()
 
+  useMemo(() => {
+    OTPWidget.initializeWidget(widgetId, tokenAuth);
+  }, [tokenAuth, widgetId])
 
-
-  const widgetId = "356b6b6a6971343732323331";
-  const tokenAuth = "477387TQM11Jolq69130c59P1"
-  OTPWidget.initializeWidget(widgetId, tokenAuth); //Widget initialization
   const handleSendOtp = async () => {
     const data = {
       identifier: `91${mobileNumber}`
     }
     const response = await OTPWidget.sendOTP(data);
-    console.log(response);
+    if (response?.type == "success") {
+      await dispatch(setMessage(response?.message))
+    } else {
+      console.log(response);
+    }
   }
+  const isValidIndianMobileLocal = (number: any) => {
+    if (!number) return false;
+    if (!/^\d+$/.test(number)) return false;
+    if (number.length !== 10) return false;
+    return /^[6-9]\d{9}$/.test(number);
+  };
 
 
-
-  const handleLogin = () => {
-    console.log("Mobile Number -- ", mobileNumber);
-    handleSendOtp()
-    // router.push("/(drawer)/(tabs)/home");
+  const handleLogin = async () => {
+    const isvalidNumber = isValidIndianMobileLocal(mobileNumber);
+    if (isvalidNumber) {
+      await handleSendOtp();
+      router.push('/screens/SignupOtpScreen')
+    } else {
+      showToast("error", "Invalid Mobile Number", "Enter a valid mobile number")
+    }
   };
 
   return (
@@ -90,7 +109,7 @@ export default function Login() {
                   value={mobileNumber}
                   placeholderTextColor="#888"
                   onChangeText={(text) =>
-                    setMobileNumber(text.replace(/[^0-9]/g, ""))
+                    dispatch(setMobileNumber(text.replace(/[^0-9]/g, "")))
                   }
                   returnKeyType="next"
                 />
@@ -158,7 +177,6 @@ const styles = StyleSheet.create({
     paddingBottom: 30,
     justifyContent: "center",
   },
-
   header: {
     alignItems: "center",
     marginBottom: 20,
