@@ -1,8 +1,8 @@
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native'
 import React from 'react'
 import { LinearGradient } from 'expo-linear-gradient'
-import useColorSchemes from '../themes/ColorSchemes'
-import { ColorTheme } from '../types/ColorTheme'
+import useColorSchemes from '@/themes/ColorSchemes'
+import { ColorTheme } from '@/types/ColorTheme'
 import CardiologistIcon from '../../assets/images/specialities/cardiologist.svg'
 import EntIcon from '../../assets/images/specialities/ent.svg';
 import CtvsIcon from "../../assets/images/specialities/ctvs.svg"

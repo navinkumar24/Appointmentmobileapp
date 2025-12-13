@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import useColorSchemes from '../themes/ColorSchemes';
+import useColorSchemes from '@/themes/ColorSchemes';
 import { useRouter } from 'expo-router';
 
 export default function SignupMobileScreen() {

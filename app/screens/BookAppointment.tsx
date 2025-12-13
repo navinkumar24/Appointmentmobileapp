@@ -13,21 +13,21 @@ import {
 import DateTimePicker from "@react-native-community/datetimepicker";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useFocusEffect } from '@react-navigation/native';
-import useColorSchemes from "@/app/themes/ColorSchemes";
-import { ColorTheme } from "../types/ColorTheme";
-import ErrorCard from '../components/ErrorCard'
+import useColorSchemes from "@/themes/ColorSchemes";
+import { ColorTheme } from "@/types/ColorTheme";
+import ErrorCard from '@/components/ErrorCard'
 import { useDispatch, useSelector } from "react-redux";
-import { AppDispatch, RootState } from "../store/store";
-import { creatingAppointment, fetchAllDoctorDropDown, fetchAvailableSlots, fetchDoctorLeaves, setSelectedDoctor } from "../store/appointmentBookingSlice";
-import { setDoctorSpecialitiesPageTitle, setSelectedSpecialist } from "../store/utilsSlice";
+import { AppDispatch, RootState } from "@/store/store";
+import { creatingAppointment, fetchAllDoctorDropDown, fetchAvailableSlots, fetchDoctorLeaves, setSelectedDoctor } from "@/store/appointmentBookingSlice";
+import { setDoctorSpecialitiesPageTitle, setSelectedSpecialist } from "@/store/utilsSlice";
 import dayjs from 'dayjs'
-import { useLeavesMessage } from "../utils/useLeavesMessage";
+import { useLeavesMessage } from "@/utils/useLeavesMessage";
 
 export default function BookAppointment() {
   const colors = useColorSchemes();
   const styles = dynamicStyles(colors);
   const { allDoctors, doctorLeaves, allAvailableSlots, selectedDoctor } = useSelector((state: RootState) => state.appointmentBooking);
-  const { selectedSpecialist} = useSelector((state: RootState) => state.utils)
+  const { selectedSpecialist } = useSelector((state: RootState) => state.utils)
   const dispatch = useDispatch<AppDispatch>()
   // Select / search state
   const [query, setQuery] = useState("");

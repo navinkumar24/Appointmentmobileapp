@@ -2,8 +2,8 @@ import React from 'react'
 import { SafeAreaView, View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, Pressable } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient'
 import Ionicons from '@expo/vector-icons/Ionicons'
-import useColorSchemes from '@/app/themes/ColorSchemes'
-import { ColorTheme } from '@/app/types/ColorTheme'
+import useColorSchemes from '@/themes/ColorSchemes'
+import { ColorTheme } from '@/types/ColorTheme'
 
 
 const DoctorProfile: React.FC = () => {

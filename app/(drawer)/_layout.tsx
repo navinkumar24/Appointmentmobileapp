@@ -2,13 +2,13 @@ import { Drawer } from "expo-router/drawer";
 import { View, Text, TouchableOpacity, StyleSheet, Dimensions, Image, Switch } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import useColorSchemes from "../themes/ColorSchemes";
-import { toggleTheme } from "../store/themeSlice";
+import useColorSchemes from "@/themes/ColorSchemes";
+import { toggleTheme } from "@/store/themeSlice";
 import { useDispatch, useSelector } from "react-redux";
-import { AppDispatch, RootState } from "../store/store";
-import { ColorTheme } from "../types/ColorTheme";
+import { AppDispatch, RootState } from "@/store/store";
+import { ColorTheme } from "@/types/ColorTheme";
 import { LinearGradient } from "expo-linear-gradient";
-import { setDoctorSpecialitiesPageTitle } from "../store/utilsSlice";
+import { setDoctorSpecialitiesPageTitle } from "@/store/utilsSlice";
 
 
 const MENU_ITEMS = [

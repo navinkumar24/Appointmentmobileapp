@@ -1,8 +1,8 @@
 import { View, Text, StyleSheet } from 'react-native'
 import React from 'react'
 import { LinearGradient } from 'expo-linear-gradient'
-import useColorSchemes from '@/app/themes/ColorSchemes'
-import { ColorTheme } from '@/app/types/ColorTheme'
+import useColorSchemes from '@/themes/ColorSchemes'
+import { ColorTheme } from '@/types/ColorTheme'
 
 const appointment = () => {
   const colors = useColorSchemes();

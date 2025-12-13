@@ -5,7 +5,7 @@ import {
     Platform, Alert
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import useColorSchemes from "../themes/ColorSchemes";
+import useColorSchemes from "@/themes/ColorSchemes";
 import { useRouter } from "expo-router";
 
 export default function SignupOtpScreen() {

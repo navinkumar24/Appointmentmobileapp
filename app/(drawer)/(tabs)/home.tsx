@@ -1,15 +1,15 @@
 import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView } from 'react-native';
 import React, { useEffect, useState } from 'react';
-import useColorSchemes from '@/app/themes/ColorSchemes';
-import { ColorTheme } from '@/app/types/ColorTheme';
+import useColorSchemes from '@/themes/ColorSchemes';
+import { ColorTheme } from '@/types/ColorTheme';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Link, useRouter } from 'expo-router';
 import { useDispatch, useSelector } from 'react-redux';
-import { AppDispatch, RootState } from '@/app/store/store';
-import { fetchAllSpecializations } from '@/app/store/homeSlice';
-import getStoredValues from '@/app/utils/getStoredValues';
+import { AppDispatch, RootState } from '@/store/store';
+import { fetchAllSpecializations } from '@/store/homeSlice';
+import getStoredValues from '@/utils/getStoredValues';
 import { SvgUri } from 'react-native-svg';
-import { setDoctorSpecialitiesPageTitle, setSelectedSpecialist } from '@/app/store/utilsSlice';
+import { setDoctorSpecialitiesPageTitle, setSelectedSpecialist } from '@/store/utilsSlice';
 
 
 export default function Home() {
@@ -20,8 +20,6 @@ export default function Home() {
   const [fileServiceBaseUrl, setFileServiceBaseUrl] = useState("");
   const [imageErrorItemList, setImageErrorItemList] = useState<number[]>([]);
   const router = useRouter();
-
-
 
   useEffect(() => {
     (async () => {

@@ -18,6 +18,12 @@ export default function Index() {
       <Text>Edit app/index.tsx to edit this screen.</Text>
       {/* <Redirect href={"/(drawer)/(tabs)/home"} /> */}
       <Button title="Go To Home" onPress={() => router.push("/(drawer)/(tabs)/home")} />
+      <View style={{ marginTop: 20 }}>
+        <Button
+          title="Go To Login"
+          onPress={() => router.push("/screens/login")}
+        />
+      </View>
     </View>
   );
 }

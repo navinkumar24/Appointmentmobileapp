@@ -1,6 +1,6 @@
 import { Tabs } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import useColorSchemes from "@/app/themes/ColorSchemes";
+import useColorSchemes from "@/themes/ColorSchemes";
 
 export default function TabsLayout() {
     const colors = useColorSchemes();

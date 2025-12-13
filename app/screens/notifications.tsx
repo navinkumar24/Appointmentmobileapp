@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, FlatList, StyleSheet, TouchableOpacity, Dimensions } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import useColorSchemes from "../themes/ColorSchemes";
+import useColorSchemes from "@/themes/ColorSchemes";
 
 const notificationsData = [
   { id: "1", title: "Appointment Confirmed", description: "Your appointment with Dr. Smith is confirmed.", time: "2h ago", unread: true },

@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView } from "react-native";
-import useColorSchemes from "@/app/themes/ColorSchemes";
-import { ColorTheme } from "@/app/types/ColorTheme";
+import useColorSchemes from "@/themes/ColorSchemes";
+import { ColorTheme } from "@/types/ColorTheme";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 

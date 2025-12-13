@@ -9,13 +9,13 @@ import {
   ScrollView,
 } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import useColorSchemes from "@/app/themes/ColorSchemes";
-import { ColorTheme } from "@/app/types/ColorTheme";
+import useColorSchemes from "@/themes/ColorSchemes";
+import { ColorTheme } from "@/types/ColorTheme";
 import { useDispatch, useSelector } from "react-redux";
-import { AppDispatch, RootState } from "../store/store";
+import { AppDispatch, RootState } from "@/store/store";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import { fetchAllDoctorDropDown, setSelectedDoctor } from "../store/appointmentBookingSlice";
+import { fetchAllDoctorDropDown, setSelectedDoctor } from "@/store/appointmentBookingSlice";
 
 
 export default function ShowDoctors() {

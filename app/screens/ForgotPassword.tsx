@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import useColorSchemes from '../themes/ColorSchemes';
+import useColorSchemes from '@/themes/ColorSchemes';
 
 export default function ForgotPassword() {
   const colors = useColorSchemes();

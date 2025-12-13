@@ -1,11 +1,6 @@
-// src/utils/encryption.js
+
 import CryptoJS from "crypto-js";
 
-/**
- * Derive a 256-bit key from a secret
- * @param {string} secret
- * @returns {WordArray} 256-bit key
- */
 function deriveKey(secret: any) {
   if (!secret) {
     throw new Error("Secret key is required for key derivation");
@@ -13,12 +8,6 @@ function deriveKey(secret: any) {
   return CryptoJS.SHA256(secret); // 256-bit key
 }
 
-/**
- * Encrypts a string or object
- * @param {string|object} text
- * @param {string} secret
- * @returns {string} iv:ciphertext (Base64 encoded)
- */
 export const encrypt = (text: any, secret: any) => {
   if (!text) {
     console.error("Encrypt: text is missing", text);
@@ -46,12 +35,6 @@ export const encrypt = (text: any, secret: any) => {
   }
 };
 
-/**
- * Decrypts a cipher text (iv:ciphertext)
- * @param {string} cipherText
- * @param {string} secret
- * @returns {string} decrypted string (for objects, use JSON.parse)
- */
 export const decrypt = (cipherText: any, secret: any) => {
   if (!cipherText) return "";
   if (!secret) {

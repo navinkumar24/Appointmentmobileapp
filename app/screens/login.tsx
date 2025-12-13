@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from "react";
 import {
   StyleSheet,
   Text,
@@ -9,53 +9,75 @@ import {
   KeyboardAvoidingView,
   Platform,
   Image,
-} from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Link, useRouter } from 'expo-router';
-import useColorSchemes from '../themes/ColorSchemes';
+  ScrollView,
+} from "react-native";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
+import { useRouter } from "expo-router";
+import useColorSchemes from "@/themes/ColorSchemes";
+import { OTPWidget } from '@msg91comm/sendotp-react-native';
 
 export default function Login() {
   const colors = useColorSchemes();
   const router = useRouter();
-
-  const [mobileNumber, setMobileNumber] = useState('');
-  const [password, setPassword] = useState('');
+  const [mobileNumber, setMobileNumber] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [loginUsingPassword, setLoginUsingPassword] = useState(false);
 
-  const toggleShowPassword = () => setShowPassword(!showPassword);
+
+
+  const widgetId = "356b6b6a6971343732323331";
+  const tokenAuth = "477387TQM11Jolq69130c59P1"
+  OTPWidget.initializeWidget(widgetId, tokenAuth); //Widget initialization
+  const handleSendOtp = async () => {
+    const data = {
+      identifier: `91${mobileNumber}`
+    }
+    const response = await OTPWidget.sendOTP(data);
+    console.log(response);
+  }
+
+
 
   const handleLogin = () => {
-    router.push("/(drawer)/(tabs)/home");
+    console.log("Mobile Number -- ", mobileNumber);
+    handleSendOtp()
+    // router.push("/(drawer)/(tabs)/home");
   };
 
   return (
     <LinearGradient
       colors={[colors.primaryContainer, colors.secondaryContainer]}
-      style={styles.gradient}
+      style={{ flex: 1 }}
     >
       <SafeAreaView style={{ flex: 1 }}>
         <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-          style={{ flex: 1 }}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={{ flex: 1, }}
         >
-          {/* ---- Main Wrapper ---- */}
-          <View style={styles.wrapper}>
-
-            {/* ---- Logo Section ---- */}
-            <View style={styles.header}>
+          <ScrollView
+            keyboardShouldPersistTaps="handled"
+            contentContainerStyle={styles.scrollContainer}
+            showsVerticalScrollIndicator={false}
+          >
+            <View style={styles.heroImageWrapper}>
               <Image
-                source={require('../../assets/images/stethoscope.png')}
-                style={styles.stethoscope}
+                source={require("../../assets/images/login-banner.png")}
+                style={styles.heroImage}
               />
-              <Text style={[styles.title]}>GS Neuro Science</Text>
+            </View>
+            {/* ---------- HEADER ---------- */}
+            <View style={styles.header}>
+              <Text style={styles.title}>GS Neuro Science</Text>
               <Text style={[styles.subtitle, { color: colors.primary }]}>
-                Your health, Our priority
+                Your health, our priority
               </Text>
             </View>
 
-            {/* ---- Card Box ---- */}
+            {/* ---------- CARD ---------- */}
             <View style={[styles.card, { backgroundColor: colors.surface }]}>
+              {/* Hero Image */}
 
               {/* Mobile Input */}
               <View style={styles.inputContainer}>
@@ -63,69 +85,66 @@ export default function Login() {
                 <TextInput
                   style={styles.input}
                   placeholder="Mobile Number"
-                  keyboardType="phone-pad"
+                  keyboardType="number-pad"
                   maxLength={10}
                   value={mobileNumber}
-                  onChangeText={setMobileNumber}
                   placeholderTextColor="#888"
+                  onChangeText={(text) =>
+                    setMobileNumber(text.replace(/[^0-9]/g, ""))
+                  }
+                  returnKeyType="next"
                 />
               </View>
 
               {/* Password Input */}
-              <View style={styles.inputContainer}>
-                <MaterialCommunityIcons name="lock-outline" size={22} color="#666" />
-                <TextInput
-                  style={styles.input}
-                  placeholder="Password"
-                  secureTextEntry={!showPassword}
-                  value={password}
-                  onChangeText={setPassword}
-                  placeholderTextColor="#888"
-                />
-                <MaterialCommunityIcons
-                  name={showPassword ? 'eye-off' : 'eye'}
-                  size={22}
-                  color="#777"
-                  onPress={toggleShowPassword}
-                />
-              </View>
+              {loginUsingPassword && (
+                <View style={styles.inputContainer}>
+                  <MaterialCommunityIcons name="lock-outline" size={22} color="#666" />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Password"
+                    secureTextEntry={!showPassword}
+                    value={password}
+                    onChangeText={setPassword}
+                    placeholderTextColor="#888"
+                  />
+                  <MaterialCommunityIcons
+                    name={showPassword ? "eye-off" : "eye"}
+                    size={22}
+                    color="#777"
+                    onPress={() => setShowPassword(!showPassword)}
+                  />
+                </View>
+              )}
 
-              {/* Forgot Password */}
+              {/* Toggle Login Mode */}
               <Text
-                style={[styles.forgotPassword, { color: colors.primary }]}
-                onPress={() => router.push('/screens/ForgotPassword')}
+                style={[styles.toggleText, { color: colors.primary }]}
+                onPress={() => setLoginUsingPassword(!loginUsingPassword)}
               >
-                Forgot Password?
+                {loginUsingPassword
+                  ? "Login using OTP?"
+                  : "Login using password?"}
               </Text>
 
               {/* Login Button */}
               <TouchableOpacity
                 style={[styles.loginButton, { backgroundColor: colors.primary }]}
                 onPress={handleLogin}
+                activeOpacity={0.85}
               >
-                <Text style={styles.loginButtonText}>Login</Text>
+                <Text style={styles.loginButtonText}>Continue</Text>
               </TouchableOpacity>
-
-              {/* Signup */}
-              <View style={styles.signupRow}>
-                <Text style={{ color: colors.onSurface }}>Don't have an account?</Text>
-                <Link
-                  href={"/screens/SignupMobileScreen"}
-                  style={[styles.signupLink, { color: colors.primary }]}
-                >
-                  Signup
-                </Link>
-              </View>
-
             </View>
 
-            {/* ---- Bottom Fixed Footer ---- */}
+            {/* ---------- FOOTER ---------- */}
             <View style={styles.footer}>
-              <Text style={styles.footerText}>Powered by </Text>
-              <Text style={{ color: colors.primary, fontWeight: '500' }}>iCare Infosystem Pvt. Ltd</Text>
+              <Text style={styles.footerText}>Powered by</Text>
+              <Text style={[styles.footerBrand, { color: colors.primary }]}>
+                iCare Infosystem Pvt. Ltd
+              </Text>
             </View>
-
-          </View>
+          </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
     </LinearGradient>
@@ -133,51 +152,47 @@ export default function Login() {
 }
 
 const styles = StyleSheet.create({
-  gradient: {
-    flex: 1,
-  },
-
-  wrapper: {
-    flex: 1,
-    justifyContent: "space-between",
+  scrollContainer: {
+    flexGrow: 1,
     paddingHorizontal: 20,
     paddingBottom: 30,
+    justifyContent: "center",
   },
 
   header: {
-    alignItems: 'center',
-    marginTop: 100,
+    alignItems: "center",
     marginBottom: 20,
   },
 
-  stethoscope: {
-    width: 80,
-    height: 80,
-    resizeMode: 'contain',
-    marginBottom: 10,
-  },
-
   title: {
-    fontSize: 24,
-    fontWeight: '700',
+    fontSize: 26,
+    fontWeight: "700",
   },
 
   subtitle: {
     fontSize: 16,
-    marginTop: 3,
     fontWeight: "500",
+    marginTop: 4,
   },
 
   card: {
-    width: "100%",
+    borderRadius: 20,
     padding: 20,
-    borderRadius: 16,
-    elevation: 4,
+    elevation: 6,
     shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 2 },
-    marginTop: -50
+    shadowOpacity: 0.12,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+  },
+
+  heroImageWrapper: {
+    alignItems: "center",
+  },
+
+  heroImage: {
+    width: "100%",
+    height: 300,
+    resizeMode: "contain",
   },
 
   inputContainer: {
@@ -185,9 +200,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#FFF",
     borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-    marginBottom: 15,
+    paddingHorizontal: 14,
+    paddingVertical: 14,
+    marginBottom: 14,
     elevation: 1,
   },
 
@@ -198,18 +213,18 @@ const styles = StyleSheet.create({
     color: "#333",
   },
 
-  forgotPassword: {
+  toggleText: {
     textAlign: "right",
-    marginBottom: 10,
     fontSize: 14,
     fontWeight: "600",
+    marginBottom: 10,
   },
 
   loginButton: {
-    paddingVertical: 14,
+    paddingVertical: 16,
     borderRadius: 12,
     alignItems: "center",
-    marginTop: 15
+    marginTop: 10,
   },
 
   loginButtonText: {
@@ -218,25 +233,19 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
 
-  signupRow: {
-    flexDirection: "row",
-    justifyContent: "center",
-    marginTop: 15,
-    gap: 5,
-  },
-
-  signupLink: {
-    fontWeight: "700",
-    textDecorationLine: "underline",
-  },
-
   footer: {
     alignItems: "center",
-    paddingBottom: 10,
+    marginTop: 25,
   },
 
   footerText: {
     fontSize: 13,
     opacity: 0.8,
+  },
+
+  footerBrand: {
+    fontSize: 14,
+    fontWeight: "600",
+    marginTop: 2,
   },
 });

@@ -1,7 +1,7 @@
 import { Stack } from "expo-router";
-import useColorSchemes from "./themes/ColorSchemes";
+import useColorSchemes from "@/themes/ColorSchemes";
 import { useSelector } from "react-redux";
-import { RootState } from "./store/store";
+import { RootState } from "@/store/store";
 
 
 

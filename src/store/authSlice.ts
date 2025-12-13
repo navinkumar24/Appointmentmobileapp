@@ -1,8 +1,8 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import type { AxiosError } from "axios";
 import { changePassword, login } from '../api/auth'
-import { encrypt } from "../utils/encryption";
-import getStoredValues from "../utils/getStoredValues";
+import { encrypt } from "@/utils/encryption";
+import getStoredValues from "@/utils/getStoredValues";
 import * as SecureStore from 'expo-secure-store'
 
 export const logging = createAsyncThunk(

@@ -10,13 +10,13 @@ import {
     Platform,
 } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import useColorSchemes from "@/app/themes/ColorSchemes";
-import { ColorTheme } from "../types/ColorTheme";
+import useColorSchemes from "@/themes/ColorSchemes";
+import { ColorTheme } from "@/types/ColorTheme";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useDispatch, useSelector } from "react-redux";
-import { AppDispatch, RootState } from "../store/store";
-import useColorsList from "../themes/ColorsList";
-import { setThemeColorsIndex, toggleTheme } from "../store/themeSlice";
+import { AppDispatch, RootState } from "@/store/store";
+import useColorsList from "@/themes/ColorsList";
+import { setThemeColorsIndex, toggleTheme } from "@/store/themeSlice";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import {
     BottomSheetModal,
@@ -54,8 +54,8 @@ const SettingScreen: React.FC = () => {
                     {/* ACCOUNT */}
                     <Text style={styles.sectionTitle}>Account</Text>
                     <View style={styles.card}>
-                        <SettingRow icon="person-circle-outline" label="Profile"  route={"/(drawer)/(tabs)/profile"} />
-                        <SettingRow icon="key-outline" label="Change Password"  route={"/(drawer)/(tabs)/home"}/>
+                        <SettingRow icon="person-circle-outline" label="Profile" route={"/(drawer)/(tabs)/profile"} />
+                        <SettingRow icon="key-outline" label="Change Password" route={"/(drawer)/(tabs)/home"} />
                         <SettingRow icon="shield-checkmark-outline" label="Security" route={"/(drawer)/(tabs)/home"} />
                     </View>
 
@@ -145,7 +145,7 @@ const SettingScreen: React.FC = () => {
                         {colorList.length === 0 ? (
                             <Text style={{ color: colors.onSurfaceVariant, marginTop: 8 }}>No themes available</Text>
                         ) : (
-                            colorList.map((item) => {
+                            colorList.map((item: any) => {
                                 const selected = item.id === themeColorsIndex;
                                 return (
                                     <TouchableOpacity
