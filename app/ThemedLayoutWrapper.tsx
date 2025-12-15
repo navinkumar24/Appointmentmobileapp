@@ -1,4 +1,4 @@
-import { Stack } from "expo-router";
+import { Stack, useRouter } from "expo-router";
 import useColorSchemes from "@/themes/ColorSchemes";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
@@ -8,6 +8,11 @@ import { RootState } from "@/store/store";
 function ThemedLayoutWrapper() {
   const colors = useColorSchemes();
   const { doctorSpecialitiesPageTitle } = useSelector((state: RootState) => state.utils);
+  const { userDetails } = useSelector((state: RootState) => state.user);
+
+
+
+
 
   return (
     <Stack>
@@ -17,6 +22,7 @@ function ThemedLayoutWrapper() {
       <Stack.Screen name="screens/SignupOtpScreen" options={{ headerShown: false }} />
       <Stack.Screen name="screens/SignupFormScreen" options={{ headerShown: false }} />
       <Stack.Screen name="screens/ForgotPassword" options={{ headerShown: false }} />
+      <Stack.Screen name="screens/GetStarted" options={{ headerShown: false }} />
 
       <Stack.Screen
         name="screens/BookAppointment"

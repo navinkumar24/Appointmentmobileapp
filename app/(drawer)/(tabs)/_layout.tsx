@@ -26,7 +26,7 @@ export default function TabsLayout() {
             <Tabs.Screen
                 name="appointment"
                 options={{
-                    title: "Appointment",
+                    title: "My Appointments",
                     tabBarIcon: ({ color, size }) => (
                         <MaterialCommunityIcons name="calendar-month" size={size} color={color} />
                     ),

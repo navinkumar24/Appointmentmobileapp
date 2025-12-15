@@ -28,7 +28,6 @@ export default function SignupFormScreen() {
     const router = useRouter();
     const dispatch = useDispatch<AppDispatch>()
     const [fullName, setFullName] = useState("");
-    const [email, setEmail] = useState("");
     const [dob, setDob] = useState<Date | null>();
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [tempDate, setTempDate] = useState<Date>(new Date());
@@ -95,7 +94,6 @@ export default function SignupFormScreen() {
         }
         const formData = {
             fullName,
-            email,
             dob,
             password,
             gender,
@@ -103,9 +101,13 @@ export default function SignupFormScreen() {
             mobileNumber,
             otpAccessToken
         };
+        
         console.log("Form Data -- ", formData);
+        
         try {
             const result = await dispatch(registering(formData)).unwrap();
+
+            console.log("Result --- ", result)
             // ✅ Success (result is guaranteed valid)
             dispatch(setMessage(null));
             dispatch(setOtpAccessToken(null));
@@ -159,28 +161,6 @@ export default function SignupFormScreen() {
                                 />
                             </View>
 
-                            {/* Email */}
-                            <View style={[styles.inputContainer, { backgroundColor: colors.surfaceVariant, borderColor: colors.outline }]}>
-                                <MaterialCommunityIcons
-                                    name="email-outline"
-                                    size={22}
-                                    color={colors.onSurfaceVariant}
-                                />
-                                <TextInput
-                                    style={[styles.input, { color: colors.onSurface }]}
-                                    placeholder="Email (optional)"
-                                    keyboardType="email-address"
-                                    value={email}
-                                    onChangeText={(text) => {
-                                        // Remove spaces completely
-                                        const sanitized = text.replace(/\s/g, "");
-                                        setEmail(sanitized);
-                                    }}
-                                    placeholderTextColor={colors.onSurfaceVariant}
-                                    autoCapitalize="none"
-                                    autoCorrect={false}
-                                />
-                            </View>
 
                             {/* DOB picker (replaces Age) */}
                             <Text style={[styles.sectionLabel, { color: colors.onSurfaceVariant }]}>Date of Birth</Text>

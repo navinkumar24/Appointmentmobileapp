@@ -1,71 +1,49 @@
-
 import CryptoJS from "crypto-js";
+import * as Crypto from "expo-crypto";
 
-function deriveKey(secret: any) {
-  if (!secret) {
-    throw new Error("Secret key is required for key derivation");
-  }
-  return CryptoJS.SHA256(secret); // 256-bit key
+function deriveKey(secret: string) {
+  return CryptoJS.enc.Hex.parse(
+    CryptoJS.SHA256(secret).toString()
+  );
 }
 
-export const encrypt = (text: any, secret: any) => {
-  if (!text) {
-    console.error("Encrypt: text is missing", text);
-    return "";
-  }
-  if (!secret) {
-    console.error("Encrypt: secret key is missing", secret);
-    return "";
-  }
+function generateIV() {
+  const bytes = Crypto.getRandomBytes(16);
+  return CryptoJS.lib.WordArray.create(bytes);
+}
 
-  try {
-    const key = deriveKey(secret);
-    const iv = CryptoJS.lib.WordArray.random(16); // 16 bytes = 128-bit IV
+export const encrypt = (text: any, secret: string) => {
+  if (!text || !secret) return "";
 
-    // Ensure text is string (for objects)
-    const textStr = typeof text === "string" ? text : JSON.stringify(text);
+  const key = deriveKey(secret);
+  const iv = generateIV();
+  const payload = typeof text === "string" ? text : JSON.stringify(text);
 
-    const encrypted = CryptoJS.AES.encrypt(textStr, key, { iv });
+  const encrypted = CryptoJS.AES.encrypt(payload, key, {
+    iv,
+    mode: CryptoJS.mode.CBC,
+    padding: CryptoJS.pad.Pkcs7,
+  });
 
-    // Return iv + ciphertext in Base64 format
-    return iv.toString(CryptoJS.enc.Base64) + ":" + encrypted.toString();
-  } catch (err) {
-    console.error("Encryption failed:", err);
-    return "";
-  }
+  return (
+    CryptoJS.enc.Base64.stringify(iv) + ":" + encrypted.toString()
+  );
 };
 
-export const decrypt = (cipherText: any, secret: any) => {
-  if (!cipherText) return "";
-  if (!secret) {
-    console.error("Decrypt: secret key is missing");
-    return "";
-  }
+export const decrypt = (cipherText: any, secret: string) => {
+  if (!cipherText || !secret) return "";
 
-  try {
-    // Split into IV and ciphertext parts
-    const parts = cipherText.split(":");
-    if (parts.length !== 2) {
-      console.warn("Invalid cipher format. Expected 'iv:cipher'");
-      return "";
-    }
+  const [ivB64, cipherB64] = cipherText.split(":");
+  if (!ivB64 || !cipherB64) return "";
 
-    const [ivBase64, cipherBase64] = parts;
-    const iv = CryptoJS.enc.Base64.parse(ivBase64);
-    const key = deriveKey(secret);
+  const iv = CryptoJS.enc.Base64.parse(ivB64);
+  const key = deriveKey(secret);
 
-    const decrypted = CryptoJS.AES.decrypt(cipherBase64, key, { iv });
-    const result = decrypted.toString(CryptoJS.enc.Utf8);
+  const decrypted = CryptoJS.AES.decrypt(cipherB64, key, {
+    iv,
+    mode: CryptoJS.mode.CBC,
+    padding: CryptoJS.pad.Pkcs7,
+  });
 
-    if (!result) {
-      console.warn("Decryption returned empty string");
-      return "";
-    }
-
-    return result;
-  } catch (error) {
-    console.error("Decryption error:", error);
-    return "";
-  }
+  return decrypted.toString(CryptoJS.enc.Utf8);
 };
-

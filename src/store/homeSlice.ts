@@ -16,7 +16,6 @@ export const fetchAllSpecializations = createAsyncThunk(
         }
     }
 )
-fetchAllSpecializations()
 
 type InitialState = {
     allSpecializations: any[];

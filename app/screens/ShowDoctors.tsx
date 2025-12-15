@@ -28,7 +28,7 @@ export default function ShowDoctors() {
 
   useEffect(() => {
     (async () => {
-      if (doctorSpecialitiesPageTitle) {
+      if (doctorSpecialitiesPageTitle || selectedSpecialist) {
         await dispatch(fetchAllDoctorDropDown(selectedSpecialist?.entityBusinessID ?? doctorSpecialitiesPageTitle?.specializationID))
       }
     })();
@@ -141,7 +141,7 @@ const dynamicStyles = (colors: ColorTheme) =>
       marginBottom: 12,
       margin: 1,
       elevation: 2,
-      shadowColor: "#000",
+      shadowColor: colors.outline,
       shadowOpacity: 0.06,
       shadowRadius: 6,
       minHeight: 80,

@@ -1,6 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import type { AxiosError } from "axios";
-import { changePassword, login, register } from '../api/auth'
+import { changePassword, login, loginOtp, register } from '../api/auth'
 import { encrypt } from "@/utils/encryption";
 import getStoredValues from "@/utils/getStoredValues";
 import * as SecureStore from 'expo-secure-store'
@@ -22,20 +22,40 @@ export const logging = createAsyncThunk(
         }
     }
 );
+
+export const logginViaOTP = createAsyncThunk(
+    "auth/logginViaOTP",
+    async (
+        { mobile, accessToken }: any, { rejectWithValue }) => {
+        try {
+            const { key } = await getStoredValues();
+            const response = await loginOtp(mobile, accessToken);
+            if (response?.statusCode == 200) {
+                const user = response.responseList?.[0];
+                const encrypted = encrypt(JSON.stringify(user), key);
+                await SecureStore.setItemAsync("udtl", encrypted);
+            }
+            // console.log("Response from the redux -- ", response)
+            return response;
+        } catch (err: any) {
+            return rejectWithValue(err.message || "OTP login failed");
+        }
+    }
+);
+
+
 export const registering = createAsyncThunk(
     "auth/registering",
     async (formData: any, { rejectWithValue }) => {
         try {
             const { key } = await getStoredValues();
-            const response = await register(formData);
-            // 🔴 Explicit validation
+            let response = await register(formData);
             if (!response || Object.keys(response).length === 0) {
                 return rejectWithValue("Invalid server response");
             }
             // 🔐 Secure storage
             const encrypted = encrypt(JSON.stringify(response), key);
             await SecureStore.setItemAsync("udtl", JSON.stringify(encrypted));
-
             return response;
         } catch (err) {
             const error = err as AxiosError<any>;
@@ -47,7 +67,6 @@ export const registering = createAsyncThunk(
         }
     }
 );
-
 
 export const changingPassword = createAsyncThunk(
     'auth/changingPassword',
@@ -67,12 +86,14 @@ export const changingPassword = createAsyncThunk(
 type InitialState = {
     mobileNumber: string | number | any,
     otpAccessToken: string | number | any,
+    isAuthenticated: boolean;
     message: string | number | any
 }
 
 const initialState: InitialState = {
     mobileNumber: null,
     otpAccessToken: null,
+    isAuthenticated: false,
     message: null
 }
 
@@ -89,6 +110,12 @@ export const authSlice = createSlice({
         setMessage: ((state, action) => {
             state.message = action.payload;
         })
+    },
+    extraReducers(builder) {
+        // builder.addCase(logginViaOTP.fulfilled, (state) => {
+        //     state.isAuthenticated = true;
+        // });
+
     },
 })
 

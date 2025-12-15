@@ -108,3 +108,32 @@ export const createAppointment = async (formData: any) => {
     }
 };
 
+
+export const getBookedAppointments = async (patientID: number | string) => {
+    const { token, baseUrl } = await getStoredValues();
+    try {
+        const response = await axios.post(`${baseUrl}/opd/appointment/getAllAppointment`,
+            {
+                "genericRequestEntity": {
+                    "doctorID": null,
+                    "patientID": 2,
+                    "startDate": null,
+                    "endDate": null
+                }
+            },
+            {
+                headers: {
+                    Authorization: token,
+                    "Content-Type": "application/json",
+                },
+            }
+        );
+        if (response?.data?.success) {
+            console.log("Appointments --- ", response?.data)
+            return response?.data?.responseList;
+        }
+    } catch (err) {
+        const error = err as AxiosError<any>;
+        showToast("error", "Error", error?.response?.data?.errorMessage)
+    }
+};

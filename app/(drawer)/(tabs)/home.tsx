@@ -10,6 +10,7 @@ import { fetchAllSpecializations } from '@/store/homeSlice';
 import getStoredValues from '@/utils/getStoredValues';
 import { SvgUri } from 'react-native-svg';
 import { setDoctorSpecialitiesPageTitle, setSelectedSpecialist } from '@/store/utilsSlice';
+import getenvValues from '@/utils/getenvValues';
 
 
 export default function Home() {
@@ -17,14 +18,12 @@ export default function Home() {
   const styles = dynamicStyles(colors);
   const dispatch = useDispatch<AppDispatch>();
   const { allSpecializations } = useSelector((state: RootState) => state.home);
-  const [fileServiceBaseUrl, setFileServiceBaseUrl] = useState("");
   const [imageErrorItemList, setImageErrorItemList] = useState<number[]>([]);
   const router = useRouter();
+  const { file_service_base_url } = getenvValues();
 
   useEffect(() => {
     (async () => {
-      const { file_service_base_url } = await getStoredValues();
-      setFileServiceBaseUrl(file_service_base_url);
       await dispatch(fetchAllSpecializations());
     })();
   }, []);
@@ -76,7 +75,7 @@ export default function Home() {
           <View style={styles.specialitiesGrid}>
 
             {allSpecializations?.map((item) => {
-              const iconUrl = item?.icon ? `${fileServiceBaseUrl}${item?.icon}` : null;
+              const iconUrl = item?.icon ? `${file_service_base_url}${item?.icon}` : null;
               const isImgErrExist = imageErrorItemList.includes(item.entityID);
 
               return (

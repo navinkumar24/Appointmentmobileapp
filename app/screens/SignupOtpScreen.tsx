@@ -18,7 +18,8 @@ import useColorSchemes from "@/themes/ColorSchemes";
 import { OTPWidget } from "@msg91comm/sendotp-sdk";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/store/store";
-import { setMessage, setOtpAccessToken } from "@/store/authSlice";
+import { logginViaOTP, setMessage, setOtpAccessToken } from "@/store/authSlice";
+import showToast from "@/utils/showToast";
 
 const OTP_LENGTH = 4;
 const RESEND_INTERVAL = 30; // seconds
@@ -26,7 +27,7 @@ const RESEND_INTERVAL = 30; // seconds
 export default function SignupOtpScreen() {
     const colors = useColorSchemes();
     const router = useRouter();
-    const { message } = useSelector((state: RootState) => state.auth)
+    const { message, otpAccessToken, mobileNumber, isAuthenticated } = useSelector((state: RootState) => state.auth)
     const dispatch = useDispatch<AppDispatch>();
 
     const [otp, setOtp] = useState<string[]>(
@@ -59,6 +60,8 @@ export default function SignupOtpScreen() {
 
         return () => clearInterval(timer);
     }, []);
+
+
 
     // animate underline when focus changes
     useEffect(() => {
@@ -139,12 +142,35 @@ export default function SignupOtpScreen() {
             otp: code
         }
         const response = await OTPWidget.verifyOTP(body);
-        if (response.type == "success") {
-            dispatch(setOtpAccessToken(response.message));
+        if (response?.type == "success") {
+            await dispatch(setOtpAccessToken(response.message));
         }
-        console.log(response);
-        router.push("/screens/SignupFormScreen");
+        if (response?.type == "error") {
+            showToast("error", "Error", response.message)
+        }
+        return response
     };
+    const handleTryForLogin = async () => {
+        try {
+            const res = await handleVerify();
+            if (res.type != "success") {
+                return;
+            }
+            console.log("REdddd --- ", res)
+            const result = await dispatch(logginViaOTP({ mobile: mobileNumber, accessToken: res?.message })).unwrap();
+            // // 3. Safe to access result
+            console.log("TRY result -- ", result)
+            if (result?.statusCode == 200) {
+                router.replace("/(drawer)/(tabs)/home");
+            } else if (result?.statusCode == 404) {
+                router.replace("/screens/SignupFormScreen")
+            }
+        } catch (error: any) {
+            console.error("Login failed:", error);
+            Alert.alert("Login Failed", error?.message || "Something went wrong");
+        }
+    };
+
 
     const handleResend = async () => {
         if (!isResendAvailable) return;
@@ -267,7 +293,7 @@ export default function SignupOtpScreen() {
                         <TouchableOpacity
                             style={[styles.verifyButton]}
                             activeOpacity={0.85}
-                            onPress={handleVerify}
+                            onPress={handleTryForLogin}
                         >
                             <LinearGradient
                                 colors={[colors.primary, colors.secondaryContainer]}

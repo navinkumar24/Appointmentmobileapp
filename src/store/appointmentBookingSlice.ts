@@ -1,6 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import type { AxiosError } from "axios";
-import { createAppointment, getAllDoctorDropDown, getAvailableSlots, getDoctorLeaves } from "../api/appointmentBooking";
+import { createAppointment, getAllDoctorDropDown, getAvailableSlots, getBookedAppointments, getDoctorLeaves } from "../api/appointmentBooking";
 
 
 
@@ -53,10 +53,24 @@ export const creatingAppointment = createAsyncThunk(
     }
 )
 
+export const fetchBookedAppointments = createAsyncThunk(
+    'home/fetchBookedAppointments',
+    async (patientID: number | string, { rejectWithValue }) => {
+        try {
+            const response = getBookedAppointments(patientID);
+            return response;
+        } catch (err) {
+            const error = err as AxiosError<any>
+            rejectWithValue(error?.message)
+        }
+    }
+)
+
 type InitialState = {
     allDoctors: any[];
     doctorLeaves: any[];
     allAvailableSlots: any[];
+    allBookedAppointments: any[];
     selectedDoctor: any | null,
     loading: boolean;
     error: string | any
@@ -66,6 +80,7 @@ const initialState: InitialState = {
     allDoctors: [],
     doctorLeaves: [],
     allAvailableSlots: [],
+    allBookedAppointments: [],
     selectedDoctor: null,
     loading: false,
     error: null,
@@ -111,6 +126,17 @@ export const appointmentBookingSlice = createSlice({
                 state.loading = false;
             })
             .addCase(fetchAvailableSlots.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload as string
+            })
+            .addCase(fetchBookedAppointments.pending, (state) => {
+                state.loading = true;
+            })
+            .addCase(fetchBookedAppointments.fulfilled, (state, action) => {
+                state.allBookedAppointments = action.payload;
+                state.loading = false;
+            })
+            .addCase(fetchBookedAppointments.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload as string
             })

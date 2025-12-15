@@ -27,6 +27,7 @@ export default function Login() {
   const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
   const { mobileNumber } = useSelector((state: RootState) => state.auth)
+  const { userDetails } = useSelector((state: RootState) => state.user)
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loginUsingPassword, setLoginUsingPassword] = useState(false);
@@ -35,6 +36,12 @@ export default function Login() {
   useMemo(() => {
     OTPWidget.initializeWidget(widgetId, tokenAuth);
   }, [tokenAuth, widgetId])
+
+  useEffect(() => {
+    if (userDetails && Object?.keys(userDetails)?.length) {
+      router.replace("/(drawer)/(tabs)/home")
+    }
+  }, [])
 
   const handleSendOtp = async () => {
     const data = {
@@ -53,7 +60,6 @@ export default function Login() {
     if (number.length !== 10) return false;
     return /^[6-9]\d{9}$/.test(number);
   };
-
 
   const handleLogin = async () => {
     const isvalidNumber = isValidIndianMobileLocal(mobileNumber);

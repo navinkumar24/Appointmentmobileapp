@@ -1,13 +1,26 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView } from "react-native";
 import useColorSchemes from "@/themes/ColorSchemes";
 import { ColorTheme } from "@/types/ColorTheme";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchUserDetails, setUserDetails } from "@/store/userSlice";
+import { AppDispatch, RootState } from "@/store/store";
+import { router, useRouter } from "expo-router";
 
 export default function Profile() {
   const colors = useColorSchemes();
   const styles = dynamicStyles(colors);
+  const dispatch = useDispatch<AppDispatch>();
+  const { userDetails } = useSelector((state: RootState) => state.user);
+  const router = useRouter();
+
+  useEffect(() => {
+    (async () => {
+      await dispatch(fetchUserDetails());
+    })();
+  }, [dispatch])
 
   return (
     <ScrollView showsVerticalScrollIndicator={false}>
@@ -23,31 +36,11 @@ export default function Profile() {
             source={require("../../../assets/images/profile.png")}
             style={styles.avatar}
           />
-          <Text style={styles.userName}>Rohit Kumar</Text>
-          <Text style={styles.userEmail}>rohit@gmail.com</Text>
-
-          <TouchableOpacity style={styles.editButton}>
+          <Text style={styles.userName}>Hi, {userDetails?.entityBusinessName}</Text>
+          <TouchableOpacity style={styles.editButton} activeOpacity={0.8}>
             <Ionicons name="create-outline" size={18} color={colors.onPrimary} />
             <Text style={styles.editButtonText}>Edit Profile</Text>
           </TouchableOpacity>
-        </View>
-
-        {/* QUICK STATS */}
-        <View style={styles.statsRow}>
-          <View style={styles.statCard}>
-            <Text style={styles.statNumber}>12</Text>
-            <Text style={styles.statLabel}>Appointments</Text>
-          </View>
-
-          <View style={styles.statCard}>
-            <Text style={styles.statNumber}>5</Text>
-            <Text style={styles.statLabel}>Reports</Text>
-          </View>
-
-          <View style={styles.statCard}>
-            <Text style={styles.statNumber}>4.8</Text>
-            <Text style={styles.statLabel}>Rating</Text>
-          </View>
         </View>
 
         {/* ABOUT SECTION */}
@@ -60,14 +53,14 @@ export default function Profile() {
 
         {/* ACTION BUTTONS */}
         <View style={styles.actionButtonsRow}>
-          <TouchableOpacity style={styles.primaryActionButton}>
-            <Ionicons name="chatbubble-ellipses-outline" size={20} color="white" />
-            <Text style={styles.primaryActionButtonText}>Message</Text>
+          <TouchableOpacity style={styles.primaryActionButton} activeOpacity={0.8} onPress={() => router.push("/(drawer)/(tabs)/appointment")}>
+            <Ionicons name="document-text-outline" size={20} color="white" />
+            <Text style={styles.primaryActionButtonText}>Booking History</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.outlineActionButton}>
-            <Ionicons name="call-outline" size={20} color={colors.primary} />
-            <Text style={styles.outlineActionButtonText}>Call</Text>
+          <TouchableOpacity style={styles.outlineActionButton} activeOpacity={0.8} onPress={() => router.push("/screens/BookAppointment")}>
+            <Ionicons name="calendar-outline" size={20} color={colors.primary} />
+            <Text style={styles.outlineActionButtonText}>Book Appointment</Text>
           </TouchableOpacity>
         </View>
 
@@ -92,10 +85,23 @@ export default function Profile() {
       COMPONENTS
 ------------------------------------ */
 function SettingItem({ icon, label, isLogout = false }: any) {
+  const router = useRouter();
+  const dispatch = useDispatch<AppDispatch>();
+  const colors = useColorSchemes();
   return (
-    <TouchableOpacity style={{ flexDirection: "row", alignItems: "center", paddingVertical: 14 }}>
-      <Ionicons name={icon} size={22} color={isLogout ? "red" : "#333"} />
-      <Text style={{ marginLeft: 12, fontSize: 15, color: isLogout ? "red" : "#333" }}>
+    <TouchableOpacity
+      style={{ flexDirection: "row", alignItems: "center", paddingVertical: 14 }}
+      activeOpacity={0.8}
+      onPress={() => {
+        if (label == "Logout") {
+          dispatch(setUserDetails(null))
+          router.push("/screens/login")
+        }
+      }
+      }
+    >
+      <Ionicons name={icon} size={22} color={isLogout ? "red" : colors.onSurface} />
+      <Text style={{ marginLeft: 12, fontSize: 15, color: isLogout ? "red" : colors.onSurface }}>
         {label}
       </Text>
     </TouchableOpacity>
@@ -207,8 +213,8 @@ const dynamicStyles = (colors: ColorTheme) =>
       flexDirection: "row",
       justifyContent: "center",
       alignItems: "center",
-      paddingVertical: 12,
-      borderRadius: 10,
+      paddingVertical: 10,
+      borderRadius: 8,
     },
 
     primaryActionButtonText: {
@@ -224,8 +230,8 @@ const dynamicStyles = (colors: ColorTheme) =>
       flexDirection: "row",
       justifyContent: "center",
       alignItems: "center",
-      paddingVertical: 12,
-      borderRadius: 10,
+      paddingVertical: 10,
+      borderRadius: 8,
     },
 
     outlineActionButtonText: {

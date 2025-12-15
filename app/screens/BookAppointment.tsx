@@ -55,11 +55,15 @@ export default function BookAppointment() {
   }, [])
 
   useEffect(() => {
-    dispatch(fetchDoctorLeaves(selectedDoctor?.entityBusinessID))
+    if (selectedDoctor?.entityBusinessID) {
+      dispatch(fetchDoctorLeaves(selectedDoctor?.entityBusinessID))
+    }
   }, [selectedDoctor])
 
   useEffect(() => {
-    dispatch(fetchAvailableSlots({ doctorID: selectedDoctor?.entityBusinessID, appointmentDate: dayjs(pickedDate)?.format("DD-MM-YYYY") }))
+    if (selectedDoctor?.entityBusinessID && pickedDate) {
+      dispatch(fetchAvailableSlots({ doctorID: selectedDoctor?.entityBusinessID, appointmentDate: dayjs(pickedDate)?.format("DD-MM-YYYY") }))
+    }
   }, [pickedDate])
 
   // Derived filtered list
@@ -251,7 +255,7 @@ const dynamicStyles = (colors: ColorTheme) =>
       backgroundColor: colors.background,
     },
     bookingTitle: {
-      fontSize: 15,
+      fontSize: 14,
       fontWeight: '600',
       color: colors.primary,
       marginVertical: 10,

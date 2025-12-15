@@ -23,31 +23,4 @@ export const getAllSpecialization = async () => {
     }
 };
 
-export const changePassword = async (entityBusinessID: any, oldPassword: any, newPassword: any) => {
-    const { token, baseUrl } = await getStoredValues();
-    try {
-        const response = await axios.post(
-            `${baseUrl}/opd/user/changePassword`,
-            {
-                changePasswordRequest: {
-                    userID: entityBusinessID,
-                    oldPassword,
-                    newPassword,
-                },
-            },
-            {
-                headers: {
-                    Authorization: token,
-                    "Content-Type": "application/json",
-                },
-            }
-        );
-        if (response?.data?.success) {
-            showToast("error", "Success", "Password Changed Successfully!")
-        }
-        return response?.data?.responseList;
-    } catch (err) {
-        const error = err as AxiosError<any>;
-        showToast("error", "Error", error?.response?.data?.errorMessage)
-    }
-};
+

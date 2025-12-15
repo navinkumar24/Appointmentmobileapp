@@ -9,16 +9,16 @@ import { AppDispatch, RootState } from "@/store/store";
 import { ColorTheme } from "@/types/ColorTheme";
 import { LinearGradient } from "expo-linear-gradient";
 import { setDoctorSpecialitiesPageTitle } from "@/store/utilsSlice";
+import { useEffect } from "react";
+import { fetchUserDetails, setUserDetails } from "@/store/userSlice";
 
 
 const MENU_ITEMS = [
     { id: 1, label: "Home", icon: "home", route: "(tabs)/home" },
     { id: 2, label: "Our Doctors", icon: "doctor", route: "/screens/ShowDoctors" },
     { id: 3, label: "My Appointment", icon: "calendar-month", route: "(tabs)/appointment" },
-    { id: 4, label: "My Reports", icon: "file-document-outline", route: "(tabs)/account" },
-    { id: 5, label: "Update Profile", icon: "account-edit-outline", route: "(tabs)/profile" },
-    { id: 6, label: "Settings", icon: "cog-outline", route: "/screens/settingScreen" },
-    { id: 7, label: "Log Out", icon: "logout", route: "login" },
+    { id: 4, label: "Settings", icon: "cog-outline", route: "/screens/settingScreen" },
+    { id: 5, label: "Log Out", icon: "logout", route: "/screens/login" },
 ];
 
 export default function DrawerLayout() {
@@ -27,10 +27,15 @@ export default function DrawerLayout() {
     const notificationsCount = 5;
     const dispatch = useDispatch<AppDispatch>();
     const { mode } = useSelector((state: RootState) => state.theme);
+    const { userDetails } = useSelector((state: RootState) => state.user);
     const styles = dynamicStyles(colors);
     const toggleDarkMode = () => {
         dispatch(toggleTheme())
     };
+
+    useEffect(() => {
+        dispatch(fetchUserDetails());
+    }, [])
 
     const renderDrawerContent = () => {
         return (
@@ -46,7 +51,7 @@ export default function DrawerLayout() {
                         style={styles.profileImage}
                     />
                     <Text style={[styles.welcomeText, { color: colors.onSurface }]}>
-                        Welcome, Shyam
+                        Welcome, {userDetails?.entityBusinessName}
                     </Text>
                 </View>
 
@@ -56,9 +61,12 @@ export default function DrawerLayout() {
                         <TouchableOpacity
                             key={index}
                             style={styles.menuItem}
-                            onPress={() => {
+                            onPress={async () => {
                                 if (item?.id === 2) {
-                                    dispatch(setDoctorSpecialitiesPageTitle({ specializationName: "All Doctors", specializationID: null }))
+                                    await dispatch(setDoctorSpecialitiesPageTitle({ specializationName: "All Doctors", specializationID: null }))
+                                }
+                                if (item?.id === 5) {
+                                    await dispatch(setUserDetails(null))
                                 }
                                 router.push(item.route)
                             }}
@@ -183,7 +191,7 @@ const dynamicStyles = (colors: ColorTheme) =>
         },
         menuLabel: {
             fontSize: 15,
-            marginLeft: 20,
+            marginLeft: 15,
             fontWeight: "500",
         },
         divider: {

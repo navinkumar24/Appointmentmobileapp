@@ -1,16 +1,23 @@
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native'
-import React from 'react'
+import React, { useState } from 'react'
 import { LinearGradient } from 'expo-linear-gradient'
 import useColorSchemes from '@/themes/ColorSchemes'
 import { ColorTheme } from '@/types/ColorTheme'
-import CardiologistIcon from '../../assets/images/specialities/cardiologist.svg'
-import EntIcon from '../../assets/images/specialities/ent.svg';
-import CtvsIcon from "../../assets/images/specialities/ctvs.svg"
-import GastroenterologyIcon from "../../assets/images/specialities/gastroenterology.svg"
+import getenvValues from '@/utils/getenvValues'
+import { useDispatch, useSelector } from 'react-redux'
+import { AppDispatch, RootState } from '@/store/store'
+import { setDoctorSpecialitiesPageTitle, setSelectedSpecialist } from '@/store/utilsSlice'
+import { useRouter } from 'expo-router'
+import { SvgUri } from 'react-native-svg'
 
 const ShowAllSpecialities = () => {
     const colors = useColorSchemes();
     const styles = dynamicStyles(colors);
+    const router = useRouter();
+    const { allSpecializations } = useSelector((state: RootState) => state.home);
+    const [imageErrorItemList, setImageErrorItemList] = useState<number[]>([]);
+    const { file_service_base_url } = getenvValues();
+    const dispatch = useDispatch<AppDispatch>()
 
     return (
         <>
@@ -21,26 +28,52 @@ const ShowAllSpecialities = () => {
                 style={styles.mainPageContainer}
             >
                 <View style={styles.specialitiesContainer}>
-                    <TouchableOpacity style={styles.specialitiesItemCard}>
-                        <EntIcon width={50} height={50} style={{ marginBottom: 10, }} color={colors.primary} />
-                        <Text style={styles.specialitiesItemText}>Neurology</Text>
-                    </TouchableOpacity>
+                    <View style={styles.specialitiesGrid}>
 
-                    <TouchableOpacity style={styles.specialitiesItemCard}>
-                        <CardiologistIcon width={50} height={50} style={{ marginBottom: 10 }} />
-                        <Text style={styles.specialitiesItemText}>Cardiology</Text>
-                    </TouchableOpacity>
+                        {allSpecializations?.map((item) => {
+                            const iconUrl = item?.icon ? `${file_service_base_url}${item?.icon}` : null;
+                            const isImgErrExist = imageErrorItemList.includes(item.entityID);
 
-                    <TouchableOpacity style={styles.specialitiesItemCard}>
-                        <CtvsIcon width={50} height={50} style={{ marginBottom: 10 }} />
-                        <Text style={styles.specialitiesItemText}>Orthopedics</Text>
-                    </TouchableOpacity>
+                            return (
+                                <TouchableOpacity
+                                    key={item.entityID}
+                                    style={styles.specialitiesItemCard}
+                                    activeOpacity={0.8}
+                                    onPress={() => {
+                                        dispatch(setDoctorSpecialitiesPageTitle({ specializationName: item?.entityBusinessName, specializationID: item?.entityBusinessID })),
+                                            dispatch(setSelectedSpecialist(item)),
+                                            router.push("/screens/ShowDoctors")
+                                    }}
+                                >
+                                    {iconUrl && !isImgErrExist ? (
+                                        <SvgUri
+                                            uri={iconUrl}
+                                            width={50}
+                                            height={50}
+                                            onError={() =>
+                                                setImageErrorItemList((list) => [...list, item.entityID])
+                                            }
+                                        />
+                                    ) : (
+                                        <View
+                                            style={{
+                                                width: 50,
+                                                height: 50,
+                                                backgroundColor: "#ccc",
+                                                borderRadius: 25,
+                                            }}
+                                        />
+                                    )}
+                                    <Text style={styles.specialitiesItemText}>
+                                        {item.entityBusinessName}
+                                    </Text>
+                                </TouchableOpacity>
+                            );
+                        })}
 
-                    <TouchableOpacity style={styles.specialitiesItemCard}>
-                        <GastroenterologyIcon width={50} height={50} style={{ marginBottom: 10 }} color={colors.primary} />
-                        <Text style={styles.specialitiesItemText}>Dermatology</Text>
-                    </TouchableOpacity>
+                    </View>
                 </View>
+
             </LinearGradient>
         </>
     )
@@ -49,30 +82,67 @@ const ShowAllSpecialities = () => {
 export default ShowAllSpecialities
 
 
+// --- Styles ---
 const dynamicStyles = (colors: ColorTheme) =>
     StyleSheet.create({
         mainPageContainer: {
             flex: 1,
             padding: 14,
         },
-        specialitiesContainer: {
+        sectionTitle: {
+            fontSize: 18,
+            fontWeight: '600',
+            color: colors.primary,
+            marginVertical: 10,
+        },
+        ourServicesContainer: {
             flexDirection: "row",
-            flexWrap: "wrap",
             justifyContent: "space-between",
+            marginBottom: 10,
+        },
+        ourServicesItemCard: {
+            width: "48%",
+            backgroundColor: colors.primaryContainer,
+            paddingVertical: 16,
+            borderRadius: 12,
+            alignItems: "center",
+            elevation: 3,
+            shadowColor: "#000",
+            shadowOpacity: 0.1,
+            shadowRadius: 4,
+        },
+        ourServicesItemLogo: {
+            width: 40,
+            height: 40,
+            marginBottom: 8,
+        },
+        ourServicesItemText: {
+            fontSize: 14,
+            fontWeight: '500',
+            color: colors.onPrimaryContainer,
+            textAlign: "center",
         },
         viewAllContainer: {
             flexDirection: "row",
             alignItems: "center",
-            justifyContent: "space-between"
+            justifyContent: "space-between",
         },
         viewAllText: {
             fontSize: 15,
             fontWeight: '600',
             textDecorationLine: 'underline',
-            color: colors.primary
+            color: colors.primary,
+        },
+        specialitiesContainer: {
+            marginTop: 10,
+        },
+        specialitiesGrid: {
+            flexDirection: "row",
+            flexWrap: "wrap",
+            justifyContent: "space-between",
         },
         specialitiesItemCard: {
-            width: "48%",                      // Ensures 2 items per row
+            width: "48%",
             backgroundColor: colors.primaryContainer,
             paddingVertical: 18,
             borderRadius: 12,
@@ -83,13 +153,6 @@ const dynamicStyles = (colors: ColorTheme) =>
             shadowOpacity: 0.08,
             shadowRadius: 3,
         },
-
-        specialitiesItemLogo: {
-            width: 50,
-            height: 50,
-            marginBottom: 10,
-        },
-
         specialitiesItemText: {
             fontSize: 13,
             fontWeight: '500',
@@ -97,7 +160,5 @@ const dynamicStyles = (colors: ColorTheme) =>
             textAlign: "center",
             marginTop: 6,
         },
-
-
     });
 
