@@ -1,7 +1,6 @@
 // app/screens/GetStarted.tsx
 import React, { useEffect } from "react";
 import {
-  SafeAreaView,
   StatusBar,
   View,
   Text,
@@ -17,6 +16,7 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import { ColorTheme } from "@/types/ColorTheme";
 import useColorSchemes from "@/themes/ColorSchemes";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 const GetStarted: React.FC = () => {

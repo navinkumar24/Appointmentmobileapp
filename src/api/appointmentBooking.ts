@@ -86,10 +86,11 @@ export const createAppointment = async (formData: any) => {
                     "appointmentStartTime": formData?.startTime,
                     "appointmentEndTime": formData?.endTime,
                     "appointmentDate": formData?.appointmentDate,
-                    "orderID": "order_hghs8488",
-                    "paymentID": "pay_kfdgj8ng",
+                    "paymentEntityID": formData?.entityID,
+                    "paymentID": formData?.paymentID,
+                    "signature": formData?.signature,
                     "doctorID": formData?.doctorID,
-                    "patientID": 2
+                    "patientID": formData?.patientID
                 }
             },
             {
@@ -99,15 +100,16 @@ export const createAppointment = async (formData: any) => {
                 },
             }
         );
+        console.log("Created Appointment -- ", response?.data)
         if (response?.data?.success) {
             return response?.data?.responseList;
         }
     } catch (err) {
+        console.log("Errr  --- ", err)
         const error = err as AxiosError<any>;
         showToast("error", "Error", error?.response?.data?.errorMessage)
     }
 };
-
 
 export const getBookedAppointments = async (patientID: number | string) => {
     const { token, baseUrl } = await getStoredValues();
@@ -132,6 +134,34 @@ export const getBookedAppointments = async (patientID: number | string) => {
             console.log("Appointments --- ", response?.data)
             return response?.data?.responseList;
         }
+    } catch (err) {
+        const error = err as AxiosError<any>;
+        showToast("error", "Error", error?.response?.data?.errorMessage)
+    }
+};
+export const createOrder = async (userID: number | string, amount: number | string) => {
+    const { token, baseUrl } = await getStoredValues();
+    console.log("Create Order Called")
+    try {
+        const response = await axios.post(`${baseUrl}/opd/payment/createOrder`,
+            {
+                "orderRequestEntity": {
+                    userID: userID,
+                    amount
+                }
+            },
+            {
+                headers: {
+                    Authorization: token,
+                    "Content-Type": "application/json",
+                },
+            }
+        );
+        console.log("Rea -- ", response?.data)
+        // if (response?.data?.success) {
+        //     return response?.data?.responseList?.[0]
+        // }
+         return response?.data?.responseList?.[0]
     } catch (err) {
         const error = err as AxiosError<any>;
         showToast("error", "Error", error?.response?.data?.errorMessage)

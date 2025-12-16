@@ -25,11 +25,13 @@ import {
     BottomSheetView,
 } from "@gorhom/bottom-sheet";
 import { useRouter } from "expo-router";
+import { setUserDetails } from "@/store/userSlice";
 
 const SettingScreen: React.FC = () => {
     const colors = useColorSchemes();
     const styles = dynamicStyles(colors);
     const insets = useSafeAreaInsets();
+    const router = useRouter()
     const dispatch = useDispatch<AppDispatch>();
     const colorList = useColorsList() ?? [];
     const { themeColorsIndex, mode } = useSelector((state: RootState) => state.theme);
@@ -55,8 +57,8 @@ const SettingScreen: React.FC = () => {
                     <Text style={styles.sectionTitle}>Account</Text>
                     <View style={styles.card}>
                         <SettingRow icon="person-circle-outline" label="Profile" route={"/(drawer)/(tabs)/profile"} />
-                        <SettingRow icon="key-outline" label="Change Password" route={"/(drawer)/(tabs)/home"} />
-                        <SettingRow icon="shield-checkmark-outline" label="Security" route={"/(drawer)/(tabs)/home"} />
+                        <SettingRow icon="key-outline" label="Change Password" route={"/(drawer)/(tabs)/changedPassword"} />
+                        <SettingRow icon="shield-checkmark-outline" label="Security" route={"/(drawer)/(tabs)/security"} />
                     </View>
 
                     {/* NOTIFICATIONS */}
@@ -115,7 +117,13 @@ const SettingScreen: React.FC = () => {
                     </View>
 
                     {/* LOGOUT */}
-                    <TouchableOpacity style={styles.logoutBtn} activeOpacity={0.85}>
+                    <TouchableOpacity
+                        style={styles.logoutBtn}
+                        activeOpacity={0.85}
+                        onPress={() => {
+                            dispatch(setUserDetails(null))
+                            router.push("/screens/login")
+                        }} >
                         <Ionicons name="log-out-outline" size={20} color={colors.error} />
                         <Text style={styles.logoutText}>Log Out</Text>
                     </TouchableOpacity>
@@ -260,7 +268,7 @@ const dynamicStyles = (colors: ColorTheme) =>
             paddingHorizontal: 6,
             marginBottom: 12,
             elevation: 2,
-            shadowColor: "#000",
+            shadowColor: colors.outline,
             shadowOpacity: 0.06,
             shadowRadius: 6,
             shadowOffset: { width: 0, height: 2 },
@@ -276,10 +284,12 @@ const dynamicStyles = (colors: ColorTheme) =>
         itemLabel: {
             fontSize: 16,
             fontWeight: "600",
+            color: colors.onSurface
         },
         colorDescription: {
             fontSize: 13,
             marginTop: 2,
+            color: colors.onSurface
         },
 
         colorPreview: {

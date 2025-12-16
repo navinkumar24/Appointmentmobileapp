@@ -4,7 +4,8 @@ const getenvValues = () => {
     const file_service_base_url = "http://192.168.1.170:9090"
     const key = "icare_application_secret_key_123";
     const widgetId = "356c6d6a5045373336363339";
-    const tokenAuth = "477387TQM11Jolq69130c59P1"
+    const tokenAuth = "477387TQM11Jolq69130c59P1";
+    const razor_pay_key = 'rzp_test_Gnx02p6xFSq2S2';
     const size = 256;
     return {
         baseUrl,
@@ -12,7 +13,8 @@ const getenvValues = () => {
         size,
         file_service_base_url,
         widgetId,
-        tokenAuth
+        tokenAuth,
+        razor_pay_key
     };
 };
 

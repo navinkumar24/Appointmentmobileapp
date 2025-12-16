@@ -19,23 +19,27 @@ import ErrorCard from '@/components/ErrorCard'
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/store/store";
 import { creatingAppointment, fetchAllDoctorDropDown, fetchAvailableSlots, fetchDoctorLeaves, setSelectedDoctor } from "@/store/appointmentBookingSlice";
-import { setDoctorSpecialitiesPageTitle, setSelectedSpecialist } from "@/store/utilsSlice";
+import { setSelectedSpecialist } from "@/store/utilsSlice";
 import dayjs from 'dayjs'
 import { useLeavesMessage } from "@/utils/useLeavesMessage";
+import RazorpayCheckout from 'react-native-razorpay';
+import getenvValues from "@/utils/getenvValues";
+import { createOrder } from "@/api/appointmentBooking";
+import { useRouter } from "expo-router";
 
 export default function BookAppointment() {
   const colors = useColorSchemes();
   const styles = dynamicStyles(colors);
   const { allDoctors, doctorLeaves, allAvailableSlots, selectedDoctor } = useSelector((state: RootState) => state.appointmentBooking);
-  const { selectedSpecialist } = useSelector((state: RootState) => state.utils)
+  const { userDetails } = useSelector((state: RootState) => state.user);
   const dispatch = useDispatch<AppDispatch>()
-  // Select / search state
   const [query, setQuery] = useState("");
   const [modalVisible, setModalVisible] = useState<boolean>(false);
   // Date picker state
   const [pickedDate, setPickedDate] = useState<any>(null);
   const [showDatePicker, setShowDatePicker] = useState<boolean>(false);
   const [selectedSlot, setSelectedSlot] = useState<any>(null);
+  const router = useRouter();
 
   useFocusEffect(
     React.useCallback(() => {
@@ -64,7 +68,7 @@ export default function BookAppointment() {
     if (selectedDoctor?.entityBusinessID && pickedDate) {
       dispatch(fetchAvailableSlots({ doctorID: selectedDoctor?.entityBusinessID, appointmentDate: dayjs(pickedDate)?.format("DD-MM-YYYY") }))
     }
-  }, [pickedDate])
+  }, [pickedDate, dispatch])
 
   // Derived filtered list
   const filteredData = useMemo(() => {
@@ -93,15 +97,46 @@ export default function BookAppointment() {
     }
   }
 
-  const handleSubmit = () => {
-    const formData = {
-      startTime: selectedSlot?.startTime,
-      endTime: selectedSlot?.endTime,
-      appointmentDate: dayjs(pickedDate)?.format("DD-MM-YYYY"),
-      doctorID: selectedDoctor?.entityBusinessID
+  const handlePayment = async () => {
+    console.log("Called ---")
+    const { razor_pay_key } = getenvValues();
+    if (!userDetails || !selectedDoctor) return;
+    const orderResponse = await createOrder(userDetails?.entityBusinessID, selectedDoctor?.opdNewCharges);
+    console.log("Order Response -- ", orderResponse)
+
+    var options: any = {
+      description: 'Taking first step towards your health.',
+      currency: 'INR',
+      key: razor_pay_key,
+      amount: selectedDoctor?.opdNewCharges,
+      name: 'Booking Appointment',
+      order_id: orderResponse?.orderId,//Replace this with an order_id created using Orders API.
+      prefill: {
+        contact: userDetails?.mobileNumber,
+        name: userDetails?.entityBusinessName
+      },
+      theme: { color: colors.primary }
     }
-    dispatch(creatingAppointment(formData))
-    setSelectedSlot(null)
+    RazorpayCheckout.open(options).then(async (data) => {
+      // handle success
+      const formData = {
+        startTime: selectedSlot?.startTime,
+        endTime: selectedSlot?.endTime,
+        appointmentDate: dayjs(pickedDate)?.format("DD-MM-YYYY"),
+        doctorID: selectedDoctor?.entityBusinessID,
+        patientID: userDetails?.entityBusinessID,
+        signature: data?.razorpay_signature,
+        paymentID: data?.razorpay_payment_id,
+        entityID: orderResponse?.entityID
+      }
+      await dispatch(creatingAppointment(formData))
+      setSelectedSlot(null);
+      
+      router.replace("/(drawer)/(tabs)/home")
+    }).catch((error) => {
+      // handle failure
+      console.log(`Error: ${error.code} | ${error.description}`);
+    });
   }
 
   return (
@@ -188,7 +223,7 @@ export default function BookAppointment() {
         <TouchableOpacity
           style={[styles.bookBtn, !(selectedDoctor && pickedDate && selectedSlot) && { opacity: 0.5 }]}
           disabled={!(selectedDoctor && pickedDate && selectedSlot)}
-          onPress={handleSubmit}
+          onPress={handlePayment}
         >
           <Text style={styles.bookBtnText}>Proceed To Pay ₹ {selectedDoctor?.opdNewCharges}</Text>
         </TouchableOpacity>

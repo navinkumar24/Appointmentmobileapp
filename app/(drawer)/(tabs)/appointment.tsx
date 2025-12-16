@@ -12,6 +12,7 @@ import {
   ActivityIndicator,
   LayoutAnimation,
   UIManager,
+  Button,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import useColorSchemes from "@/themes/ColorSchemes";
@@ -20,6 +21,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/store/store";
 import { fetchBookedAppointments } from "@/store/appointmentBookingSlice";
 import { ScrollView } from "react-native-gesture-handler";
+import { downloadInvoice } from "@/utils/downloadInvoice";
 
 /** Enable LayoutAnimation on Android */
 if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -119,6 +121,9 @@ const Appointment = () => {
                 {item.appointmentStartTime} • {item.appointmentEndTime}
               </Text>
               <View style={[styles.smallBadge, { backgroundColor: colors.surfaceVariant }]}>
+                <Pressable onPress={() => downloadInvoice(item)}>
+                  <Text>Download Invoice</Text>
+                </Pressable>
                 <Text style={[styles.smallBadgeText, { color: colors.onSurfaceVariant }]}>
                   #{item.appointmentID}
                 </Text>
@@ -165,7 +170,7 @@ const Appointment = () => {
       style={styles.mainPageContainer}
     >
       <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
-        <Text style={styles.sectionTitle}>Our Services</Text>
+        <Text style={styles.sectionTitle}>My Appointments</Text>
         {loading ? (
           <View style={styles.loading}>
             <ActivityIndicator size="large" color={colors.primary} />

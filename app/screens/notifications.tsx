@@ -1,92 +1,444 @@
-import React from "react";
-import { View, Text, FlatList, StyleSheet, TouchableOpacity, Dimensions } from "react-native";
+import React, { useState, useCallback } from "react";
+import {
+  View,
+  Text,
+  FlatList,
+  StyleSheet,
+  TouchableOpacity,
+  Alert,
+  Pressable,
+  Platform,
+} from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import useColorSchemes from "@/themes/ColorSchemes";
 
-const notificationsData = [
-  { id: "1", title: "Appointment Confirmed", description: "Your appointment with Dr. Smith is confirmed.", time: "2h ago", unread: true },
-  { id: "2", title: "Report Ready", description: "Your blood test report is now available.", time: "1d ago", unread: false },
-  { id: "3", title: "New Message", description: "Dr. John has sent you a message.", time: "3d ago", unread: true },
-  { id: "4", title: "Appointment Reminder", description: "Reminder: Appointment with Dr. Smith tomorrow at 10 AM.", time: "5d ago", unread: false },
+const initialNotifications = [
+  {
+    id: "1",
+    title: "Appointment Confirmed",
+    description: "Your appointment with Dr. Smith is confirmed.",
+    time: "2h ago",
+    unread: true,
+  },
+  {
+    id: "2",
+    title: "Report Ready",
+    description: "Your blood test report is now available.",
+    time: "1d ago",
+    unread: false,
+  },
+  {
+    id: "3",
+    title: "New Message",
+    description: "Dr. John has sent you a message.",
+    time: "3d ago",
+    unread: true,
+  },
+  {
+    id: "4",
+    title: "Appointment Reminder",
+    description: "Reminder: Appointment with Dr. Smith tomorrow at 10 AM.",
+    time: "5d ago",
+    unread: false,
+  },
 ];
 
 export default function Notifications() {
   const colors = useColorSchemes();
+  const [notifications, setNotifications] = useState(initialNotifications);
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
-  const renderNotificationItem = ({ item }: any) => {
-    return (
-      <TouchableOpacity style={[styles.notificationCard, { backgroundColor: item.unread ? colors.primaryContainer : colors.surface }]} activeOpacity={0.8}>
-        <View style={styles.iconContainer}>
-          <MaterialCommunityIcons
-            name={item.unread ? "bell-ring" : "bell-outline"}
-            size={28}
-            color={item.unread ? colors.primary : colors.onSurfaceVariant}
-          />
-        </View>
-        <View style={styles.textContainer}>
-          <Text style={[styles.title, { color: colors.onSurface }]}>{item.title}</Text>
-          <Text style={[styles.description, { color: colors.onSurfaceVariant }]}>{item.description}</Text>
-          <Text style={[styles.time, { color: colors.outline }]}>{item.time}</Text>
-        </View>
-      </TouchableOpacity>
+  const toggleSelect = useCallback(
+    (id: string) => {
+      setSelectedIds((prev) => {
+        if (prev.includes(id)) return prev.filter((x) => x !== id);
+        return [...prev, id];
+      });
+    },
+    [setSelectedIds]
+  );
+
+  const enterSelectionWith = (id: string) => {
+    setSelectionMode(true);
+    setSelectedIds([id]);
+  };
+
+  const handleLongPress = (item: any) => {
+    // If already in selection mode, toggle selection
+    if (selectionMode) {
+      toggleSelect(item.id);
+      return;
+    }
+    // Otherwise open selection mode with this item
+    enterSelectionWith(item.id);
+  };
+
+  const handlePress = (item: any) => {
+    if (selectionMode) {
+      toggleSelect(item.id);
+      return;
+    }
+
+    // Normal tap: mark read (or open notification detail)
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === item.id ? { ...n, unread: false } : n))
+    );
+
+    // TODO: navigate to relevant screen if needed
+  };
+
+  const confirmDelete = (idsToDelete: string[]) => {
+    Alert.alert(
+      idsToDelete.length > 1 ? "Delete notifications" : "Delete notification",
+      `Are you sure you want to delete ${idsToDelete.length} notification${
+        idsToDelete.length > 1 ? "s" : ""
+      }?`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: () => {
+            setNotifications((prev) =>
+              prev.filter((n) => !idsToDelete.includes(n.id))
+            );
+            setSelectionMode(false);
+            setSelectedIds([]);
+          },
+        },
+      ]
     );
   };
 
+  const handleDeleteSelected = () => {
+    if (selectedIds.length === 0) return;
+    confirmDelete(selectedIds);
+  };
+
+  const handleSingleDelete = (id: string) => {
+    confirmDelete([id]);
+  };
+
+  const handleSelectAll = () => {
+    if (selectedIds.length === notifications.length) {
+      // toggle off
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(notifications.map((n) => n.id));
+    }
+  };
+
+  const renderNotificationItem = ({ item }: any) => {
+    const isSelected = selectedIds.includes(item.id);
+
+    return (
+      <Pressable
+        onPress={() => handlePress(item)}
+        onLongPress={() => handleLongPress(item)}
+        android_ripple={{ color: colors.surfaceVariant }}
+        style={({ pressed }) => [
+          styles.notificationCard,
+          {
+            backgroundColor: item.unread ? colors.primaryContainer : colors.surface,
+            borderColor: isSelected ? colors.primary : "transparent",
+            opacity: pressed ? 0.96 : 1,
+            shadowColor: colors.shadow ?? "#000",
+          },
+        ]}
+      >
+        {/* Left accent / selection */}
+        <View
+          style={[
+            styles.leftAccent,
+            {
+              backgroundColor: isSelected
+                ? colors.primary
+                : item.unread
+                ? colors.primary
+                : "transparent",
+            },
+          ]}
+        />
+
+        <View style={styles.contentRow}>
+          {/* Icon or checkbox in selection mode */}
+          <View style={styles.iconWrap}>
+            {selectionMode ? (
+              <MaterialCommunityIcons
+                name={isSelected ? "checkbox-marked-circle" : "checkbox-blank-circle-outline"}
+                size={22}
+                color={isSelected ? colors.onPrimary : colors.onSurfaceVariant}
+              />
+            ) : (
+              <MaterialCommunityIcons
+                name={item.unread ? "bell-ring" : "bell-outline"}
+                size={26}
+                color={item.unread ? colors.primary : colors.onSurfaceVariant}
+              />
+            )}
+          </View>
+
+          <View style={styles.textContainer}>
+            <View style={styles.titleRow}>
+              <Text style={[styles.title, { color: colors.onSurface }]} numberOfLines={1}>
+                {item.title}
+              </Text>
+              <Text style={[styles.time, { color: colors.outline }]}>{item.time}</Text>
+            </View>
+
+            <Text
+              style={[styles.description, { color: colors.onSurfaceVariant }]}
+              numberOfLines={2}
+            >
+              {item.description}
+            </Text>
+          </View>
+
+          {/* Overflow menu for single delete (three dots) */}
+          {!selectionMode && (
+            <TouchableOpacity
+              onPress={() =>
+                Alert.alert("Notification actions", undefined, [
+                  {
+                    text: item.unread ? "Mark as read" : "Mark as unread",
+                    onPress: () =>
+                      setNotifications((prev) =>
+                        prev.map((n) =>
+                          n.id === item.id ? { ...n, unread: !n.unread } : n
+                        )
+                      ),
+                  },
+                  { text: "Delete", style: "destructive", onPress: () => handleSingleDelete(item.id) },
+                  { text: "Cancel", style: "cancel" },
+                ])
+              }
+              style={styles.moreButton}
+            >
+              <MaterialCommunityIcons name="dots-vertical" size={20} color={colors.onSurfaceVariant} />
+            </TouchableOpacity>
+          )}
+        </View>
+      </Pressable>
+    );
+  };
+
+  const renderEmpty = () => (
+    <View style={styles.emptyContainer}>
+      <MaterialCommunityIcons name="bell-off-outline" size={48} color={colors.onSurfaceVariant} />
+      <Text style={[styles.emptyTitle, { color: colors.onSurface }]}>No notifications</Text>
+      <Text style={[styles.emptySubtitle, { color: colors.onSurfaceVariant }]}>
+        You're all caught up.
+      </Text>
+    </View>
+  );
+
   return (
-    <View style={[styles.container, { backgroundColor: colors.surface }]}>
-      
+    <View style={[styles.root, { backgroundColor: colors.surface }]}>
+      {/* Header */}
+      <View style={[styles.header, { borderBottomColor: colors.surfaceVariant }]}>
+        {!selectionMode ? (
+          <>
+            <Text style={[styles.headerTitle, { color: colors.onSurface }]}>Notifications</Text>
+            <View style={styles.headerActions}>
+              <TouchableOpacity
+                onPress={() => {
+                  // mark all read
+                  setNotifications((prev) => prev.map((n) => ({ ...n, unread: false })));
+                }}
+                style={styles.headerIcon}
+              >
+                <MaterialCommunityIcons name="check-all" size={20} color={colors.onSurfaceVariant} />
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => {
+                  // enter selection mode with none selected
+                  setSelectionMode(true);
+                  setSelectedIds([]);
+                }}
+                style={styles.headerIcon}
+              >
+                <MaterialCommunityIcons name="trash-can-outline" size={20} color={colors.onSurfaceVariant} />
+              </TouchableOpacity>
+            </View>
+          </>
+        ) : (
+          <>
+            <View style={styles.selectionLeft}>
+              <TouchableOpacity
+                onPress={() => {
+                  setSelectionMode(false);
+                  setSelectedIds([]);
+                }}
+                style={{ paddingRight: 12 }}
+              >
+                <MaterialCommunityIcons name="close" size={22} color={colors.onSurface} />
+              </TouchableOpacity>
+              <Text style={[styles.selectionCount, { color: colors.onSurface }]}>
+                {selectedIds.length} selected
+              </Text>
+            </View>
+
+            <View style={styles.headerActions}>
+              <TouchableOpacity onPress={handleSelectAll} style={styles.headerIcon}>
+                <MaterialCommunityIcons name="select-all" size={20} color={colors.onSurfaceVariant} />
+              </TouchableOpacity>
+
+              <TouchableOpacity onPress={handleDeleteSelected} style={styles.headerIcon}>
+                <MaterialCommunityIcons name="delete" size={20} color={selectedIds.length ? colors.error : colors.onSurfaceVariant} />
+              </TouchableOpacity>
+            </View>
+          </>
+        )}
+      </View>
+
       <FlatList
-        data={notificationsData}
+        data={notifications}
         keyExtractor={(item) => item.id}
         renderItem={renderNotificationItem}
-        contentContainerStyle={styles.listContent}
+        ItemSeparatorComponent={() => <View style={[styles.separator, { backgroundColor: colors.surfaceVariant }]} />}
+        contentContainerStyle={notifications.length === 0 ? styles.flatEmpty : styles.listContent}
+        ListEmptyComponent={renderEmpty}
       />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  root: {
     flex: 1,
-    paddingHorizontal: 15,
-    paddingTop: 20,
   },
   header: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 15,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    borderBottomWidth: StyleSheet.hairlineWidth,
   },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: "600",
+  },
+  headerActions: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  headerIcon: {
+    marginLeft: 12,
+    padding: 6,
+    borderRadius: 8,
+  },
+
+  selectionLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  selectionCount: {
+    fontSize: 16,
+    fontWeight: "600",
+  },
+
   listContent: {
-    paddingBottom: 20,
+    padding: 12,
+    paddingBottom: 24,
   },
+  flatEmpty: {
+    flexGrow: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 24,
+  },
+
   notificationCard: {
     flexDirection: "row",
-    padding: 15,
-    borderRadius: 15,
-    marginBottom: 10,
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 3 },
-    elevation: 3,
+    alignItems: "center",
+    borderRadius: 12,
+    padding: 12,
+    marginVertical: 6,
+    // shadow
+    ...Platform.select({
+      ios: {
+        shadowOpacity: 0.08,
+        shadowRadius: 8,
+        shadowOffset: { width: 0, height: 6 },
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
+    borderWidth: 1,
   },
-  iconContainer: {
-    marginRight: 15,
+
+  leftAccent: {
+    width: 6,
+    height: "100%",
+    borderRadius: 4,
+    marginRight: 12,
+  },
+
+  contentRow: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "flex-start",
+  },
+
+  iconWrap: {
+    width: 36,
+    alignItems: "center",
     justifyContent: "center",
+    marginRight: 12,
   },
+
   textContainer: {
     flex: 1,
   },
+
+  titleRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 6,
+  },
+
   title: {
-    fontSize: 16,
-    fontWeight: "bold",
-    marginBottom: 3,
+    fontSize: 15,
+    fontWeight: "600",
+    flex: 1,
+    marginRight: 8,
   },
-  description: {
-    fontSize: 14,
-    marginBottom: 5,
-  },
+
   time: {
     fontSize: 12,
+    marginLeft: 8,
+  },
+
+  description: {
+    fontSize: 13,
+    lineHeight: 18,
+  },
+
+  moreButton: {
+    paddingLeft: 12,
+    paddingTop: 2,
+  },
+
+  separator: {
+    height: 8,
+  },
+
+  emptyContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingTop: 40,
+  },
+  emptyTitle: {
+    marginTop: 12,
+    fontSize: 18,
+    fontWeight: "600",
+  },
+  emptySubtitle: {
+    marginTop: 6,
+    fontSize: 13,
   },
 });

@@ -70,6 +70,7 @@ export default function DrawerLayout() {
                                 }
                                 router.push(item.route)
                             }}
+                            activeOpacity={0.8}
                         >
                             <MaterialCommunityIcons
                                 name={item.icon}
@@ -104,11 +105,11 @@ export default function DrawerLayout() {
 
                 {/* Contact Info */}
                 <View style={styles.contactContainer}>
-                    <TouchableOpacity style={styles.menuItem}>
+                    <TouchableOpacity style={styles.menuItem}  activeOpacity={0.8}>
                         <MaterialCommunityIcons name="phone-outline" size={24} color={colors.primary} />
                         <Text style={[styles.menuLabel, { color: colors.onSurface }]}>+91 8546859854</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.menuItem}>
+                    <TouchableOpacity style={styles.menuItem}  activeOpacity={0.8}>
                         <MaterialCommunityIcons name="gmail" size={24} color={colors.primary} />
                         <Text style={[styles.menuLabel, { color: colors.onSurface }]}>icare@gmail.com</Text>
                     </TouchableOpacity>
@@ -134,6 +135,7 @@ export default function DrawerLayout() {
                     <TouchableOpacity
                         style={{ marginRight: 15 }}
                         onPress={() => router.push("/screens/notifications")}
+                         activeOpacity={0.8}
                     >
                         <MaterialCommunityIcons
                             name="bell-outline"

@@ -5,7 +5,6 @@ import { RootState } from "@/store/store";
 
 export default function Index() {
   const router = useRouter();
- 
 
   return (
     <>
