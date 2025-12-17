@@ -22,6 +22,7 @@ import { AppDispatch, RootState } from "@/store/store";
 import { fetchBookedAppointments } from "@/store/appointmentBookingSlice";
 import { ScrollView } from "react-native-gesture-handler";
 import { downloadInvoice } from "@/utils/downloadInvoice";
+import { MaterialIcons } from "@expo/vector-icons";
 
 /** Enable LayoutAnimation on Android */
 if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -116,33 +117,31 @@ const Appointment = () => {
         >
           <View style={styles.rowTop}>
             <View style={styles.dateBlock}>
+
+              <Text style={styles.doctorName}>{item.doctorName ?? "—"}</Text>
+              <Text style={styles.timeText}>{item.appointmentStartTime} • {item.appointmentEndTime}</Text>
               <Text style={styles.dateText}>{formatDateDisplay(item.appointmentDate)}</Text>
-              <Text style={styles.timeText}>
-                {item.appointmentStartTime} • {item.appointmentEndTime}
-              </Text>
-              <View style={[styles.smallBadge, { backgroundColor: colors.surfaceVariant }]}>
-                <Pressable onPress={() => downloadInvoice(item)}>
-                  <Text>Download Invoice</Text>
-                </Pressable>
-                <Text style={[styles.smallBadgeText, { color: colors.onSurfaceVariant }]}>
-                  #{item.appointmentID}
-                </Text>
-              </View>
             </View>
 
-            <View style={styles.meta}>
-              <View style={{ flexDirection: "row", alignItems: "center" }}>
-                <Text style={styles.infoTitle}>Dr. Name : </Text>
-                <Text style={styles.doctorName}>{item.doctorName ?? "—"}</Text>
+            <View>
+              <View>
+                <Text style={styles.paidBadge}>₹ 500</Text>
               </View>
-              <View style={{ flexDirection: "row", alignItems: "center" }}>
-                <Text style={styles.infoTitle}>Pt. Name : </Text>
-                <Text style={styles.patientName}>{item.patientName ?? "—"}</Text>
-              </View>
-              <View style={{ flexDirection: "row", alignItems: "center" }}>
-                <Text style={styles.infoTitle}>Mob No. : </Text>
-                <Text style={styles.doctorName}>{item.patientMobile ?? "—"}</Text>
-              </View>
+              <Pressable
+                onPress={async () => { await downloadInvoice(item) }}
+                style={styles.printButtonWrapper}
+              >
+                <LinearGradient
+                  colors={[colors.primary, colors.secondary]}
+                  style={styles.smallBadge}
+                >
+                  <MaterialIcons
+                    name="print"
+                    size={20}
+                    color="#fff"
+                  />
+                </LinearGradient>
+              </Pressable>
 
             </View>
           </View>
@@ -152,6 +151,7 @@ const Appointment = () => {
               <Row label="Patient mobile" value={item.patientMobile ?? "—"} colors={colors} />
               <Row label="Patient DOB" value={item.patientDOB ?? "—"} colors={colors} />
               <Row label="Address" value={item.patientAddress ?? "—"} colors={colors} />
+              <Row label="Appointment ID" value={item.appointmentID ?? "—"} colors={colors} />
               <Row label="Order ID" value={item.orderID ?? "—"} colors={colors} />
               <Row label="Payment ID" value={item.paymentID ?? "—"} colors={colors} />
               <Row label="Booked at" value={item.effectiveDateFrom ? new Date(item.effectiveDateFrom).toLocaleString() : "—"} colors={colors} />
@@ -180,6 +180,11 @@ const Appointment = () => {
             <ItemCard key={`${item.appointmentID}_${item.entityID}`} item={item} index={index} />
           ))
         )}
+        <View>
+          <Text style={{ fontSize: 15, fontWeight: '600', alignSelf: "center", marginTop: 100 }}>
+            Not Available
+          </Text>
+        </View>
       </ScrollView>
     </LinearGradient>
   );
@@ -221,8 +226,8 @@ const makeStyles = (colors: ColorTheme) =>
       fontSize: 13,
     },
     sectionTitle: {
-      fontSize: 18,
-      fontWeight: '600',
+      fontSize: 15,
+      fontWeight: '700',
       color: colors.primary,
       marginVertical: 10,
     },
@@ -245,24 +250,24 @@ const makeStyles = (colors: ColorTheme) =>
     },
 
     cardWrapper: {
-      margin: 5
+      margin: 2
     },
 
     card: {
       backgroundColor: colors.surface,
       borderRadius: 8,
       width: "100%",
-      padding: 14,
+      padding: 13,
       shadowColor: colors.outline,
       shadowOffset: { width: 0, height: 6 },
-      shadowOpacity: 0.08,
-      shadowRadius: 16,
-      elevation: 6,
+      shadowRadius: 15,
+      elevation: 4,
     },
 
     rowTop: {
       flexDirection: "row",
       alignItems: "center",
+      justifyContent: 'space-between'
     },
 
     dateBlock: {
@@ -271,21 +276,25 @@ const makeStyles = (colors: ColorTheme) =>
       borderRightWidth: 1,
       borderRightColor: colors.surface,
       flexDirection: "column",
-      alignItems: "center",
-      justifyContent: "center"
     },
     dateText: {
       color: colors.onSurface,
-      fontWeight: "800",
-      fontSize: 15,
-      marginBottom: 6,
+      fontWeight: "600",
+      fontSize: 11,
+      marginTop: 6
     },
     timeText: {
       color: colors.onSurface,
       opacity: 0.9,
       fontSize: 12,
     },
-
+    paidBadge: {
+      backgroundColor: "#a5e8c8",
+      paddingHorizontal: 6,
+      paddingVertical: 2,
+      borderRadius: 10,
+      fontSize: 12
+    },
     meta: {
       flex: 1,
       paddingLeft: 12,
@@ -320,15 +329,23 @@ const makeStyles = (colors: ColorTheme) =>
       fontSize: 12,
       fontWeight: "700",
     },
+    printButtonWrapper: {
+      borderRadius: 20,
+      overflow: "hidden",
+      marginTop: 5
+    },
 
     smallBadge: {
-      paddingHorizontal: 8,
-      paddingVertical: 4,
-      borderRadius: 5,
-    },
-    smallBadgeText: {
-      fontSize: 12,
-      fontWeight: "700",
+      width: 40,
+      height: 40,
+      borderRadius: 20, // half of width/height
+      alignItems: "center",
+      justifyContent: "center",
+      elevation: 4, // Android shadow
+      shadowColor: "#000", // iOS shadow
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.25,
+      shadowRadius: 3,
     },
 
     details: {

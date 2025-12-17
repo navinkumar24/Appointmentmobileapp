@@ -5,7 +5,6 @@ import {
   View,
   TextInput,
   TouchableOpacity,
-  SafeAreaView,
   KeyboardAvoidingView,
   Platform,
   Image,
@@ -21,6 +20,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/store/store";
 import { setMessage, setMobileNumber } from "@/store/authSlice";
 import showToast from "@/utils/showToast";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function Login() {
   const colors = useColorSchemes();

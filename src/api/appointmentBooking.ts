@@ -79,18 +79,14 @@ export const getAvailableSlots = async (doctorID: number | string, appointmentDa
 };
 export const createAppointment = async (formData: any) => {
     const { token, baseUrl } = await getStoredValues();
+    console.log("Verify form data - ", formData)
     try {
-        const response = await axios.post(`${baseUrl}/opd/appointment/createAppointment`,
+        const response = await axios.post(`${baseUrl}/opd/payment/verifyOrder`,
             {
-                "appointmentRequestEntity": {
-                    "appointmentStartTime": formData?.startTime,
-                    "appointmentEndTime": formData?.endTime,
-                    "appointmentDate": formData?.appointmentDate,
-                    "paymentEntityID": formData?.entityID,
+                "verifyOrderRequest": {
                     "paymentID": formData?.paymentID,
-                    "signature": formData?.signature,
-                    "doctorID": formData?.doctorID,
-                    "patientID": formData?.patientID
+                    "appointmentID": formData?.appointmentID,
+                    "signature": formData?.signature
                 }
             },
             {
@@ -118,7 +114,7 @@ export const getBookedAppointments = async (patientID: number | string) => {
             {
                 "genericRequestEntity": {
                     "doctorID": null,
-                    "patientID": 2,
+                    "patientID": patientID,
                     "startDate": null,
                     "endDate": null
                 }
@@ -139,15 +135,23 @@ export const getBookedAppointments = async (patientID: number | string) => {
         showToast("error", "Error", error?.response?.data?.errorMessage)
     }
 };
-export const createOrder = async (userID: number | string, amount: number | string) => {
+export const createOrder = async (userID: number | string, amount: number | string, formData: any) => {
     const { token, baseUrl } = await getStoredValues();
     console.log("Create Order Called")
+    console.log("user ID -- ", userID)
     try {
         const response = await axios.post(`${baseUrl}/opd/payment/createOrder`,
             {
                 "orderRequestEntity": {
                     userID: userID,
                     amount
+                },
+                "appointmentRequestEntity": {
+                    "appointmentStartTime": formData?.startTime,
+                    "appointmentEndTime": formData?.endTime,
+                    "appointmentDate": formData?.appointmentDate,
+                    "doctorID": formData?.doctorID,
+                    "patientID": userID
                 }
             },
             {
@@ -161,9 +165,10 @@ export const createOrder = async (userID: number | string, amount: number | stri
         // if (response?.data?.success) {
         //     return response?.data?.responseList?.[0]
         // }
-         return response?.data?.responseList?.[0]
+        return response?.data?.responseList?.[0]
     } catch (err) {
         const error = err as AxiosError<any>;
+        console.log("Errroorrrrr -- ", error?.response?.data)
         showToast("error", "Error", error?.response?.data?.errorMessage)
     }
 };

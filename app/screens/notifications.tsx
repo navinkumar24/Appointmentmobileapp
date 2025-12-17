@@ -91,8 +91,7 @@ export default function Notifications() {
   const confirmDelete = (idsToDelete: string[]) => {
     Alert.alert(
       idsToDelete.length > 1 ? "Delete notifications" : "Delete notification",
-      `Are you sure you want to delete ${idsToDelete.length} notification${
-        idsToDelete.length > 1 ? "s" : ""
+      `Are you sure you want to delete ${idsToDelete.length} notification${idsToDelete.length > 1 ? "s" : ""
       }?`,
       [
         { text: "Cancel", style: "cancel" },
@@ -155,8 +154,8 @@ export default function Notifications() {
               backgroundColor: isSelected
                 ? colors.primary
                 : item.unread
-                ? colors.primary
-                : "transparent",
+                  ? colors.primary
+                  : "transparent",
             },
           ]}
         />
@@ -236,7 +235,7 @@ export default function Notifications() {
   return (
     <View style={[styles.root, { backgroundColor: colors.surface }]}>
       {/* Header */}
-      <View style={[styles.header, { borderBottomColor: colors.surfaceVariant }]}>
+      {/* <View style={[styles.header, { borderBottomColor: colors.surfaceVariant }]}>
         {!selectionMode ? (
           <>
             <Text style={[styles.headerTitle, { color: colors.onSurface }]}>Notifications</Text>
@@ -290,16 +289,17 @@ export default function Notifications() {
             </View>
           </>
         )}
-      </View>
+      </View> */}
 
-      <FlatList
+      {/* <FlatList
         data={notifications}
         keyExtractor={(item) => item.id}
         renderItem={renderNotificationItem}
         ItemSeparatorComponent={() => <View style={[styles.separator, { backgroundColor: colors.surfaceVariant }]} />}
         contentContainerStyle={notifications.length === 0 ? styles.flatEmpty : styles.listContent}
         ListEmptyComponent={renderEmpty}
-      />
+      /> */}
+      <Text style={{ alignSelf: "center", marginTop: 50, fontSize : 15, fontWeight : '600' }}>Not Available</Text>
     </View>
   );
 }

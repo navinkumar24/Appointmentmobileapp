@@ -157,26 +157,29 @@ export async function downloadInvoice(data: any) {
 </html>
 `;
 
-    const { uri } = await Print.printToFileAsync({ html });
+    // const { uri } = await Print.printToFileAsync({ html });
 
-    await Sharing.shareAsync(uri, {
-        mimeType: "application/pdf",
-        dialogTitle: "Download Appointment Invoice",
-        UTI: "com.adobe.pdf",
-    });
+    // await Sharing.shareAsync(uri, {
+    //     mimeType: "application/pdf",
+    //     dialogTitle: "Download Appointment Invoice",
+    //     UTI: "com.adobe.pdf",
+    // });
 
-    // 1️⃣ OPEN PDF FIRST
-    await Linking.openURL(uri);
+    // // 1️⃣ OPEN PDF FIRST
+    // await Linking.openURL(uri);
 
-    // 2️⃣ OPTIONAL: allow download/share AFTER preview
-    setTimeout(async () => {
-        if (await Sharing.isAvailableAsync()) {
-            await Sharing.shareAsync(uri, {
-                mimeType: "application/pdf",
-                dialogTitle: "Download Appointment Invoice",
-                UTI: "com.adobe.pdf",
-            });
-        }
-    }, 800);
+    // // 2️⃣ OPTIONAL: allow download/share AFTER preview
+    // setTimeout(async () => {
+    //     if (await Sharing.isAvailableAsync()) {
+    //         await Sharing.shareAsync(uri, {
+    //             mimeType: "application/pdf",
+    //             dialogTitle: "Download Appointment Invoice",
+    //             UTI: "com.adobe.pdf",
+    //         });
+    //     }
+    // }, 800);
+     await Print.printAsync({
+    html,
+  });
 
 }

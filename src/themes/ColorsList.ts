@@ -14,6 +14,57 @@ function useColorsList(): ColorItem[] {
   const { mode } = useSelector((state: RootState) => state.theme);
   const isDark = mode === "dark"
 
+  const colorDarkBlueTheme: ColorTheme = {
+    primary: isDark ? "#A5C8FF" : "#00284F",
+    surfaceTint: isDark ? "#A5C8FF" : "#326098",
+    onPrimary: isDark ? "#00315E" : "#FFFFFF",
+    primaryContainer: "#003E75",
+    onPrimaryContainer: "#80AAE8",
+    secondary: isDark ? "#B8C7E3" : "#505F77",
+    onSecondary: isDark ? "#223147" : "#FFFFFF",
+    secondaryContainer: isDark ? "#3B4A61" : "#D1E0FD",
+    onSecondaryContainer: isDark ? "#AAB9D4" : "#54637B",
+    tertiary: isDark ? "#E8B4F9" : "#3E144F",
+    onTertiary: isDark ? "#471E59" : "#FFFFFF",
+    tertiaryContainer: "#562C67",
+    onTertiaryContainer: "#C997DA",
+    error: isDark ? "#FFB4AB" : "#BA1A1A",
+    onError: isDark ? "#690005" : "#FFFFFF",
+    errorContainer: isDark ? "#93000A" : "#FFDAD6",
+    onErrorContainer: isDark ? "#FFDAD6" : "#93000A",
+    background: isDark ? "#111317" : "#F9F9FE",
+    onBackground: isDark ? "#E2E2E7" : "#1A1C1F",
+    surface: isDark ? "#111317" : "#F9F9FE",
+    onSurface: isDark ? "#E2E2E7" : "#1A1C1F",
+    surfaceVariant: isDark ? "#424750" : "#DFE2ED",
+    onSurfaceVariant: isDark ? "#C2C6D1" : "#424750",
+    outline: isDark ? "#8C919B" : "#737781",
+    outlineVariant: isDark ? "#424750" : "#C2C6D1",
+    shadow: "#000000",
+    scrim: "#000000",
+    inverseSurface: isDark ? "#E2E2E7" : "#2F3035",
+    inverseOnSurface: isDark ? "#2F3035" : "#F0F0F6",
+    inversePrimary: isDark ? "#326098" : "#A5C8FF",
+    primaryFixed: "#D4E3FF",
+    onPrimaryFixed: "#001C3A",
+    primaryFixedDim: "#A5C8FF",
+    onPrimaryFixedVariant: "#13477F",
+    secondaryFixed: "#D4E3FF",
+    onSecondaryFixed: "#0C1C31",
+    secondaryFixedDim: "#B8C7E3",
+    onSecondaryFixedVariant: "#39475E",
+    tertiaryFixed: "#F8D8FF",
+    onTertiaryFixed: "#300542",
+    tertiaryFixedDim: "#E8B4F9",
+    onTertiaryFixedVariant: "#603571",
+    surfaceDim: isDark ? "#111317" : "#D9D9DF",
+    surfaceBright: isDark ? "#37393D" : "#F9F9FE",
+    surfaceContainerLowest: isDark ? "#0C0E12" : "#FFFFFF",
+    surfaceContainerLow: isDark ? "#1A1C1F" : "#F3F3F8",
+    surfaceContainer: isDark ? "#1E2024" : "#EDEDF3",
+    surfaceContainerHigh: isDark ? "#282A2E" : "#E8E8ED",
+    surfaceContainerHighest: isDark ? "#333539" : "#E2E2E7"
+  }
   const colorBlueTheme: ColorTheme = {
     primary: isDark ? "#96CDF8" : "#276389",
     surfaceTint: isDark ? "#96CDF8" : "#276389",
@@ -66,7 +117,7 @@ function useColorsList(): ColorItem[] {
     surfaceContainerHighest: isDark ? "#313539" : "#E0E3E8"
   }
 
-  const colorPurpleTheme : ColorTheme = {
+  const colorPurpleTheme: ColorTheme = {
     primary: isDark ? "#D1BCFD" : "#67558E",
     surfaceTint: isDark ? "#D1BCFD" : "#67558E",
     onPrimary: isDark ? "#37265C" : "#FFFFFF",
@@ -117,7 +168,7 @@ function useColorsList(): ColorItem[] {
     surfaceContainerHigh: isDark ? "#2B292F" : "#ECE6EE",
     surfaceContainerHighest: isDark ? "#36343A" : "#E7E0E8"
   }
-  const colorGreenTheme : ColorTheme = {
+  const colorGreenTheme: ColorTheme = {
     primary: isDark ? "#8FD5AF" : "#236A4B",
     surfaceTint: isDark ? "#8FD5AF" : "#236A4B",
     onPrimary: isDark ? "#003824" : "#FFFFFF",
@@ -168,7 +219,7 @@ function useColorsList(): ColorItem[] {
     surfaceContainerHigh: isDark ? "#262B27" : "#E4EAE3",
     surfaceContainerHighest: isDark ? "#303632" : "#DEE4DE"
   }
-  const colorLavenderTheme : ColorTheme = {
+  const colorLavenderTheme: ColorTheme = {
     primary: isDark ? "#FFB1C8" : "#8C4A60",
     surfaceTint: isDark ? "#FFB1C8" : "#8C4A60",
     onPrimary: isDark ? "#541D32" : "#FFFFFF",
@@ -219,7 +270,7 @@ function useColorsList(): ColorItem[] {
     surfaceContainerHigh: isDark ? "#31282A" : "#F5E4E7",
     surfaceContainerHighest: isDark ? "#3C3235" : "#EFDFE1"
   }
-  const colorBrownTheme : ColorTheme = {
+  const colorBrownTheme: ColorTheme = {
     primary: isDark ? "#ECC06C" : "#7A590C",
     surfaceTint: isDark ? "#ECC06C" : "#7A590C",
     onPrimary: isDark ? "#412D00" : "#FFFFFF",
@@ -278,25 +329,30 @@ function useColorsList(): ColorItem[] {
     {
       id: 0,
       name: "Blue",
-      colorTheme: colorBlueTheme
+      colorTheme: colorDarkBlueTheme
     },
     {
       id: 1,
+      name: "Blue",
+      colorTheme: colorBlueTheme
+    },
+    {
+      id: 2,
       name: "Purple",
       colorTheme: colorPurpleTheme
     },
     {
-      id: 2,
+      id: 3,
       name: "Green",
       colorTheme: colorGreenTheme
     },
     {
-      id: 3,
+      id: 4,
       name: "Lavender",
       colorTheme: colorLavenderTheme
     },
     {
-      id: 4,
+      id: 5,
       name: "Brown",
       colorTheme: colorBrownTheme
     },

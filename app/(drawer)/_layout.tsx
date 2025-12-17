@@ -24,7 +24,7 @@ const MENU_ITEMS = [
 export default function DrawerLayout() {
     const router = useRouter();
     const colors = useColorSchemes();
-    const notificationsCount = 5;
+    const notificationsCount = 0;
     const dispatch = useDispatch<AppDispatch>();
     const { mode } = useSelector((state: RootState) => state.theme);
     const { userDetails } = useSelector((state: RootState) => state.user);
@@ -50,7 +50,7 @@ export default function DrawerLayout() {
                         source={require("../../assets/images/profile.png")}
                         style={styles.profileImage}
                     />
-                    <Text style={[styles.welcomeText, { color: colors.onSurface }]}>
+                    <Text style={[styles.welcomeText, { color: colors.onPrimary }]}>
                         Welcome, {userDetails?.entityBusinessName}
                     </Text>
                 </View>
@@ -68,7 +68,7 @@ export default function DrawerLayout() {
                                 if (item?.id === 5) {
                                     await dispatch(setUserDetails(null))
                                 }
-                                router.push(item.route)
+                                router.push(item?.route)
                             }}
                             activeOpacity={0.8}
                         >
@@ -105,11 +105,11 @@ export default function DrawerLayout() {
 
                 {/* Contact Info */}
                 <View style={styles.contactContainer}>
-                    <TouchableOpacity style={styles.menuItem}  activeOpacity={0.8}>
+                    <TouchableOpacity style={styles.menuItem} activeOpacity={0.8}>
                         <MaterialCommunityIcons name="phone-outline" size={24} color={colors.primary} />
                         <Text style={[styles.menuLabel, { color: colors.onSurface }]}>+91 8546859854</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.menuItem}  activeOpacity={0.8}>
+                    <TouchableOpacity style={styles.menuItem} activeOpacity={0.8}>
                         <MaterialCommunityIcons name="gmail" size={24} color={colors.primary} />
                         <Text style={[styles.menuLabel, { color: colors.onSurface }]}>icare@gmail.com</Text>
                     </TouchableOpacity>
@@ -127,20 +127,20 @@ export default function DrawerLayout() {
                     width: Dimensions.get("window").width * 0.65,
                 },
                 headerStyle: {
-                    backgroundColor: colors.primaryContainer,
+                    backgroundColor: colors.primary,
                 },
                 headerTitle: "GS NueroScience",
-                headerTintColor: colors.onPrimaryContainer,
+                headerTintColor: colors.onPrimary,
                 headerRight: () => (
                     <TouchableOpacity
                         style={{ marginRight: 15 }}
                         onPress={() => router.push("/screens/notifications")}
-                         activeOpacity={0.8}
+                        activeOpacity={0.8}
                     >
                         <MaterialCommunityIcons
                             name="bell-outline"
                             size={26}
-                            color={colors.onPrimaryContainer}
+                            color={colors.onPrimary}
                         />
                         {notificationsCount > 0 && (
                             <View style={styles.badge}>

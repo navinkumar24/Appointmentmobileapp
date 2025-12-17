@@ -100,9 +100,22 @@ export default function BookAppointment() {
   const handlePayment = async () => {
     console.log("Called ---")
     const { razor_pay_key } = getenvValues();
-    if (!userDetails || !selectedDoctor) return;
-    const orderResponse = await createOrder(userDetails?.entityBusinessID, selectedDoctor?.opdNewCharges);
-    console.log("Order Response -- ", orderResponse)
+
+    // if (!userDetails || !selectedDoctor) return;
+
+    let formData = {
+      startTime: selectedSlot?.startTime,
+      endTime: selectedSlot?.endTime,
+      appointmentDate: dayjs(pickedDate)?.format("DD-MM-YYYY"),
+      doctorID: selectedDoctor?.entityBusinessID,
+      patientID : userDetails?.entityBusinessID
+    }
+
+    console.log("Form Data -- ", formData)
+
+    const orderResponse = await createOrder(userDetails?.entityBusinessID, selectedDoctor?.opdNewCharges, formData);
+    console.log("Order Response -- ", orderResponse);
+
 
     var options: any = {
       description: 'Taking first step towards your health.',
@@ -110,7 +123,7 @@ export default function BookAppointment() {
       key: razor_pay_key,
       amount: selectedDoctor?.opdNewCharges,
       name: 'Booking Appointment',
-      order_id: orderResponse?.orderId,//Replace this with an order_id created using Orders API.
+      order_id: orderResponse?.orderID,//Replace this with an order_id created using Orders API.
       prefill: {
         contact: userDetails?.mobileNumber,
         name: userDetails?.entityBusinessName
@@ -118,20 +131,15 @@ export default function BookAppointment() {
       theme: { color: colors.primary }
     }
     RazorpayCheckout.open(options).then(async (data) => {
-      // handle success
-      const formData = {
-        startTime: selectedSlot?.startTime,
-        endTime: selectedSlot?.endTime,
-        appointmentDate: dayjs(pickedDate)?.format("DD-MM-YYYY"),
-        doctorID: selectedDoctor?.entityBusinessID,
-        patientID: userDetails?.entityBusinessID,
+      console.log("Razorpay response -- ", data)
+      let NewformData = {
         signature: data?.razorpay_signature,
         paymentID: data?.razorpay_payment_id,
-        entityID: orderResponse?.entityID
+        appointmentID: orderResponse?.appointmentID
       }
-      await dispatch(creatingAppointment(formData))
+      console.log("Form Data for verify -- ", NewformData)
+      await dispatch(creatingAppointment(NewformData))
       setSelectedSlot(null);
-      
       router.replace("/(drawer)/(tabs)/home")
     }).catch((error) => {
       // handle failure

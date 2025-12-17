@@ -35,9 +35,6 @@ const SettingScreen: React.FC = () => {
     const dispatch = useDispatch<AppDispatch>();
     const colorList = useColorsList() ?? [];
     const { themeColorsIndex, mode } = useSelector((state: RootState) => state.theme);
-    // local toggles (for demo; wire to store if required)
-    const [pushNotif, setPushNotif] = useState(true);
-    const [emailNotif, setEmailNotif] = useState(false);
     const bottomSheetRef = useRef<BottomSheetModal>(null);
     const snapPoints = useMemo(() => ["60%", "80%"], []);
     const openBottomSheet = useCallback(() => {
@@ -61,22 +58,7 @@ const SettingScreen: React.FC = () => {
                         <SettingRow icon="shield-checkmark-outline" label="Security" route={"/(drawer)/(tabs)/security"} />
                     </View>
 
-                    {/* NOTIFICATIONS */}
-                    <Text style={styles.sectionTitle}>Notifications</Text>
-                    <View style={styles.card}>
-                        <SwitchRow
-                            icon="notifications-outline"
-                            label="Push Notifications"
-                            value={pushNotif}
-                            onValueChange={setPushNotif}
-                        />
-                        <SwitchRow
-                            icon="mail-outline"
-                            label="Email Alerts"
-                            value={emailNotif}
-                            onValueChange={setEmailNotif}
-                        />
-                    </View>
+                   
 
                     {/* APPEARANCE */}
                     <Text style={styles.sectionTitle}>Appearance</Text>

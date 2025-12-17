@@ -29,49 +29,49 @@ function ThemedLayoutWrapper() {
         options={{
           title: "Appointment Booking",
           headerStyle: {
-            backgroundColor: colors.primaryContainer
+            backgroundColor: colors.primary
           },
-          headerTintColor: colors.onPrimaryContainer
+          headerTintColor: colors.onPrimary
         }}
       />
       <Stack.Screen
         name="screens/ShowAllSpecialities"
         options={{
           title: "Available Specialities",
-          headerStyle: { backgroundColor: colors.primaryContainer },
-          headerTintColor: colors.onPrimaryContainer,
+          headerStyle: { backgroundColor: colors.primary },
+          headerTintColor: colors.onPrimary,
         }}
       />
       <Stack.Screen
         name="screens/notifications"
         options={{
           title: "All Notifications",
-          headerStyle: { backgroundColor: colors.primaryContainer },
-          headerTintColor: colors.onPrimaryContainer,
+          headerStyle: { backgroundColor: colors.primary },
+          headerTintColor: colors.onPrimary,
         }}
       />
       <Stack.Screen
         name="screens/ShowDoctors"
         options={{
           title: doctorSpecialitiesPageTitle?.specializationName,
-          headerStyle: { backgroundColor: colors.primaryContainer },
-          headerTintColor: colors.onPrimaryContainer,
+          headerStyle: { backgroundColor: colors.primary },
+          headerTintColor: colors.onPrimary,
         }}
       />
       <Stack.Screen
         name="screens/DoctorProfile"
         options={{
           title: "Doctor Profile",
-          headerStyle: { backgroundColor: colors.primaryContainer },
-          headerTintColor: colors.onPrimaryContainer,
+          headerStyle: { backgroundColor: colors.primary },
+          headerTintColor: colors.onPrimary,
         }}
       />
       <Stack.Screen
         name="screens/settingScreen"
         options={{
-          title: "Setting",
-          headerStyle: { backgroundColor: colors.primaryContainer },
-          headerTintColor: colors.onPrimaryContainer,
+          title: "Settings",
+          headerStyle: { backgroundColor: colors.primary },
+          headerTintColor: colors.onPrimary,
         }}
       />
 
