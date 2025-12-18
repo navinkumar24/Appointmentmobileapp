@@ -16,6 +16,7 @@ import { AppDispatch, RootState } from "@/store/store";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { fetchAllDoctorDropDown, setSelectedDoctor } from "@/store/appointmentBookingSlice";
+import { LinearGradient } from "expo-linear-gradient";
 
 
 export default function ShowDoctors() {
@@ -35,20 +36,29 @@ export default function ShowDoctors() {
   }, [dispatch])
 
   return (
-    <ScrollView
-      style={styles.screen}
-      contentContainerStyle={{ paddingBottom: insets.bottom + 30 }}
+
+    <LinearGradient
+      colors={[colors.surface, colors.secondaryContainer]}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      style={styles.mainPageContainer}
     >
-      <Text style={styles.headerTitle}>Our Doctors</Text>
-      {
-        allDoctors?.map((item) => (
-          <DoctorCard key={item?.entityID} doctor={item} colors={colors} styles={styles} />
-        ))
-      }
-      {!allDoctors?.length && <View style={styles.emptyContainer}>
-        <Text>No Doctor Available</Text>
-      </View>}
-    </ScrollView>
+      <ScrollView
+        style={{ flex: 1 }}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: insets.bottom + 30 }}
+      >
+        <Text style={styles.headerTitle}>Our Doctors</Text>
+        {
+          allDoctors?.map((item) => (
+            <DoctorCard key={item?.entityID} doctor={item} colors={colors} styles={styles} />
+          ))
+        }
+        {!allDoctors?.length && <View style={styles.emptyContainer}>
+          <Text>No Doctor Available</Text>
+        </View>}
+      </ScrollView>
+    </LinearGradient>
   );
 }
 
@@ -112,10 +122,9 @@ function DoctorCard({ doctor, colors, styles }: { doctor: any, colors: ColorThem
 /* ---------------- DYNAMIC STYLES ---------------- */
 const dynamicStyles = (colors: ColorTheme) =>
   StyleSheet.create({
-    screen: {
+    mainPageContainer: {
       flex: 1,
-      backgroundColor: colors.background,
-      paddingHorizontal: 6,
+      padding: 6,
     },
     headerTitle: {
       fontSize: 18,
@@ -138,7 +147,7 @@ const dynamicStyles = (colors: ColorTheme) =>
       backgroundColor: colors.surface,
       borderRadius: 12,
       padding: 6,
-      marginBottom: 12,
+      marginBottom: 5,
       margin: 1,
       elevation: 2,
       shadowColor: colors.outline,
@@ -151,7 +160,6 @@ const dynamicStyles = (colors: ColorTheme) =>
       flexDirection: "row",
       alignItems: "center",
     },
-
     avatar: {
       width: 60,
       height: 60,

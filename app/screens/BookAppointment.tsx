@@ -101,21 +101,20 @@ export default function BookAppointment() {
     console.log("Called ---")
     const { razor_pay_key } = getenvValues();
 
-    // if (!userDetails || !selectedDoctor) return;
+    if (!userDetails || !selectedDoctor) return;
 
     let formData = {
       startTime: selectedSlot?.startTime,
       endTime: selectedSlot?.endTime,
       appointmentDate: dayjs(pickedDate)?.format("DD-MM-YYYY"),
       doctorID: selectedDoctor?.entityBusinessID,
-      patientID : userDetails?.entityBusinessID
+      patientID: userDetails?.entityBusinessID
     }
 
     console.log("Form Data -- ", formData)
 
     const orderResponse = await createOrder(userDetails?.entityBusinessID, selectedDoctor?.opdNewCharges, formData);
     console.log("Order Response -- ", orderResponse);
-
 
     var options: any = {
       description: 'Taking first step towards your health.',

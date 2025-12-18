@@ -4,15 +4,11 @@ import {
   View,
   Text,
   StyleSheet,
-  Dimensions,
   Platform,
-  FlatList,
   Pressable,
   Animated,
   ActivityIndicator,
   LayoutAnimation,
-  UIManager,
-  Button,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import useColorSchemes from "@/themes/ColorSchemes";
@@ -23,12 +19,10 @@ import { fetchBookedAppointments } from "@/store/appointmentBookingSlice";
 import { ScrollView } from "react-native-gesture-handler";
 import { downloadInvoice } from "@/utils/downloadInvoice";
 import { MaterialIcons } from "@expo/vector-icons";
+import FilterToggle from "@/components/FilterToggle";
 
-/** Enable LayoutAnimation on Android */
-if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
-  UIManager.setLayoutAnimationEnabledExperimental(true);
-}
 
+LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
 
 /** ---------- Utility ---------- */
 const keyFor = (a: any) => `${a.appointmentID}_${a.entityID}`;
@@ -56,6 +50,7 @@ const Appointment = () => {
   const { userDetails } = useSelector((s: RootState) => s.user);
   const { allBookedAppointments, loading } = useSelector((s: RootState) => s.appointmentBooking);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [activeFilter, setActiveFilter] = useState<"upcoming" | "past">("upcoming");
 
   // animation values per item key
   const animatedValues = useRef<Record<string, Animated.Value>>({}).current;
@@ -68,7 +63,6 @@ const Appointment = () => {
       }
     })();
   }, [userDetails?.entityBusinessID]);
-
 
   // Create Animated.Value for new items and trigger staggered animation
   useEffect(() => {
@@ -125,7 +119,7 @@ const Appointment = () => {
 
             <View>
               <View>
-                <Text style={styles.paidBadge}>₹ 500</Text>
+                <Text style={styles.paidBadge}>₹ {item?.amount || 0}</Text>
               </View>
               <Pressable
                 onPress={async () => { await downloadInvoice(item) }}
@@ -162,6 +156,30 @@ const Appointment = () => {
     );
   };
 
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const parseDDMMYYYY = (dateStr: string): Date => {
+    const [day, month, year] = dateStr.split("-").map(Number);
+    return new Date(year, month - 1, day); // month is 0-based
+  };
+
+  const filteredAppointments = allBookedAppointments?.filter(item => {
+    const appointmentDate = parseDDMMYYYY(item.appointmentDate);
+    appointmentDate.setHours(0, 0, 0, 0);
+
+    if (activeFilter === "upcoming") {
+      return appointmentDate >= today;
+    }
+
+    if (activeFilter === "past") {
+      return appointmentDate < today;
+    }
+
+    return true;
+  });
+
+
   return (
     <LinearGradient
       colors={[colors.surface, colors.secondaryContainer]}
@@ -171,20 +189,25 @@ const Appointment = () => {
     >
       <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
         <Text style={styles.sectionTitle}>My Appointments</Text>
+        <FilterToggle
+          activeFilter={activeFilter}
+          onChange={(f) => setActiveFilter(f)}
+          containerStyle={{ width: "100%", marginVertical: 12 }}
+        />
         {loading ? (
           <View style={styles.loading}>
             <ActivityIndicator size="large" color={colors.primary} />
           </View>
         ) : (
-          allBookedAppointments?.map((item, index) => (
+          filteredAppointments?.map((item, index) => (
             <ItemCard key={`${item.appointmentID}_${item.entityID}`} item={item} index={index} />
           ))
         )}
-        <View>
+        {!filteredAppointments?.length && <View>
           <Text style={{ fontSize: 15, fontWeight: '600', alignSelf: "center", marginTop: 100 }}>
             Not Available
           </Text>
-        </View>
+        </View>}
       </ScrollView>
     </LinearGradient>
   );
@@ -220,6 +243,39 @@ const makeStyles = (colors: ColorTheme) =>
       fontWeight: "800",
       marginBottom: 6,
     },
+
+    filterDataContainer: {
+      flexDirection: "row",
+      padding: 4,
+      borderRadius: 10,
+      alignItems: "center",
+      justifyContent: "space-around"
+    },
+
+    subCard: {
+      width: '45%',
+      paddingVertical: 10,
+      alignItems: "center",
+      borderRadius: 8,
+      backgroundColor: colors.surface,
+      elevation: 4,
+      shadowColor: colors.onSurface
+    },
+    activeSubCard: {
+      backgroundColor: colors.primary, // primary blue
+    },
+
+    activeSubCardText: {
+      color: "#FFFFFF",
+      fontWeight: "600",
+    },
+
+    subCardText: {
+      fontSize: 14,
+      fontWeight: "500",
+      color: "#6B7280",
+    },
+
     headerSubtitle: {
       color: colors.onSurface,
       opacity: 0.85,

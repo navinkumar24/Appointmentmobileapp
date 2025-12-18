@@ -9,6 +9,7 @@ import {
   Platform,
   Image,
   ScrollView,
+  StatusBar,
 } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -77,6 +78,11 @@ export default function Login() {
       style={{ flex: 1 }}
     >
       <SafeAreaView style={{ flex: 1 }}>
+        <StatusBar
+          barStyle="light-content"
+          translucent
+          backgroundColor="transparent"
+        />
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}
           style={{ flex: 1, }}

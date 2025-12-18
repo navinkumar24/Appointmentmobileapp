@@ -50,7 +50,7 @@ export default function DrawerLayout() {
                         source={require("../../assets/images/profile.png")}
                         style={styles.profileImage}
                     />
-                    <Text style={[styles.welcomeText, { color: colors.onPrimary }]}>
+                    <Text style={[styles.welcomeText, { color: colors.onPrimaryContainer }]}>
                         Welcome, {userDetails?.entityBusinessName}
                     </Text>
                 </View>

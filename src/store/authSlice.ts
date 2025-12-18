@@ -43,7 +43,6 @@ export const logginViaOTP = createAsyncThunk(
     }
 );
 
-
 export const registering = createAsyncThunk(
     "auth/registering",
     async (formData: any, { rejectWithValue }) => {

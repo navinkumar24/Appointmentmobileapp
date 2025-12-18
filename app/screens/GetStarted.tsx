@@ -9,7 +9,7 @@ import {
   TouchableOpacity,
   Dimensions,
   Platform,
-  Image,
+  Animated,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useSelector } from "react-redux";
@@ -17,13 +17,26 @@ import { RootState } from "@/store/store";
 import { ColorTheme } from "@/types/ColorTheme";
 import useColorSchemes from "@/themes/ColorSchemes";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { LinearGradient } from "expo-linear-gradient";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
+
 const GetStarted: React.FC = () => {
   const router = useRouter();
   const { userDetails } = useSelector((state: RootState) => state.user);
-  const colors = useColorSchemes()
-  const styles = dynamicStyles(colors)
+  const colors = useColorSchemes();
+  const styles = dynamicStyles(colors);
+
+  // Animation for fade-in effect
+  const fadeAnim = new Animated.Value(0);
+
+  useEffect(() => {
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 1000,
+      useNativeDriver: true,
+    }).start();
+  }, []);
 
   useEffect(() => {
     if (userDetails && Object.keys(userDetails).length > 0) {
@@ -36,38 +49,44 @@ const GetStarted: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={styles.safe}>
-      <StatusBar
-        barStyle="light-content"
-        translucent
-        backgroundColor="transparent"
-      />
-      <ImageBackground source={require("../../assets/images/getstarted.png")} style={styles.background} />
+    <ImageBackground
+      source={require("../../assets/images/getstarted.png")}
+      style={styles.background}
+    >
+      <LinearGradient
+        colors={["rgba(0,0,0,0.4)", "rgba(0,0,0,0.8)"]}
+        style={styles.overlay}
+      >
+        <SafeAreaView style={styles.safe}>
+          <StatusBar
+            barStyle="light-content"
+            translucent
+            backgroundColor="transparent"
+          />
+          <Animated.View style={[styles.topContent, { opacity: fadeAnim }]}>
+            <Text style={styles.title}>Welcome to Your Health Journey</Text>
+            <Text style={styles.subtitle}>
+              Take the first step towards a healthier and happier you.
+            </Text>
+          </Animated.View>
+          <Animated.View style={[styles.bottomContainer, { opacity: fadeAnim }]}>
+            <TouchableOpacity
+              onPress={handleGetStarted}
+              style={styles.button}
+              activeOpacity={0.85}
+              accessibilityRole="button"
+              accessibilityLabel="Get Started"
+            >
+              <Text style={styles.buttonText}>Get Started</Text>
+            </TouchableOpacity>
 
-      {/* Top / middle content (logo/title) */}
-      <View style={styles.topContent}>
-        <Text style={styles.subtitle}>
-          Click on Get Started and take first step towards you health.
-        </Text>
-      </View>
-
-      {/* Bottom button */}
-      <View style={styles.bottomContainer}>
-        <TouchableOpacity
-          onPress={handleGetStarted}
-          style={styles.button}
-          activeOpacity={0.85}
-          accessibilityRole="button"
-          accessibilityLabel="Get Started"
-        >
-          <Text style={styles.buttonText}>Get Started</Text>
-        </TouchableOpacity>
-
-        <Text style={styles.legalText}>
-          By continuing you agree to our Terms & Privacy.
-        </Text>
-      </View>
-    </SafeAreaView >
+            <Text style={styles.legalText}>
+              By continuing you agree to our Terms & Privacy.
+            </Text>
+          </Animated.View>
+        </SafeAreaView>
+      </LinearGradient>
+    </ImageBackground>
   );
 };
 
@@ -75,69 +94,66 @@ export default GetStarted;
 
 const dynamicStyles = (colors: ColorTheme) =>
   StyleSheet.create({
-    safe: {
-      flex: 1,
-      backgroundColor: colors.surface,
-    },
     background: {
       flex: 1,
       width: SCREEN_WIDTH,
       height: SCREEN_HEIGHT,
-      justifyContent: "space-between",
-      alignItems: "center",
     },
-
+    overlay: {
+      flex: 1,
+      justifyContent: "space-between",
+    },
+    safe: {
+      flex: 1,
+      paddingHorizontal: 24,
+      justifyContent: "space-between",
+    },
     topContent: {
-      marginTop: Platform.OS === "android" ? 56 : 80,
+      marginTop: Platform.OS === "android" ? 80 : 120,
       alignItems: "center",
       paddingHorizontal: 24,
-      marginBottom: 2,
     },
     title: {
-      color: "#FFFFFF",
-      fontSize: 36,
-      fontWeight: "800",
+      color: colors.onPrimary,
+      fontSize: 42,
+      fontWeight: "bold",
       textAlign: "center",
-      marginBottom: 8,
-      letterSpacing: 0.2,
+      marginBottom: 16,
+      letterSpacing: 0.5,
     },
     subtitle: {
-      color: "#FFFFFF",
-      fontSize: 16,
+      color: colors.onPrimary,
+      fontSize: 18,
       textAlign: "center",
-      opacity: 0.95,
-      marginBottom : 10
+      opacity: 0.9,
+      lineHeight: 25,
     },
     bottomContainer: {
       width: "100%",
       alignItems: "center",
-      paddingHorizontal: 24,
-      paddingBottom: Platform.OS === "android" ? 32 : 48,
+      paddingBottom: Platform.OS === "android" ? 40 : 60,
     },
     button: {
-      width: "92%",
-      maxWidth: 420,
-      paddingVertical: 14,
-      borderRadius: 12,
-      backgroundColor: "#FFFFFF",
+      width: "100%",
+      paddingVertical: 18,
+      borderRadius: 16,
+      backgroundColor: colors.inversePrimary,
       alignItems: "center",
       justifyContent: "center",
-      // shadow (iOS)
       shadowColor: "#000",
-      shadowOffset: { width: 0, height: 6 },
-      shadowOpacity: 0.12,
-      shadowRadius: 12,
-      // elevation (Android)
-      elevation: 6,
+      shadowOffset: { width: 0, height: 8 },
+      shadowOpacity: 0.2,
+      shadowRadius: 15,
+      elevation: 8,
     },
     buttonText: {
-      color: "#0A0A0A",
-      fontSize: 16,
-      fontWeight: "700",
+      color: colors.onPrimary,
+      fontSize: 18,
+      fontWeight: "600",
     },
     legalText: {
-      marginTop: 12,
-      color: "rgba(255,255,255,0.85)",
+      marginTop: 16,
+      color: "rgba(255,255,255,0.7)",
       fontSize: 12,
       textAlign: "center",
     },
