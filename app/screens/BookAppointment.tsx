@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useMemo, useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -9,6 +9,8 @@ import {
   FlatList,
   Platform,
   Keyboard,
+  ScrollView,
+  RefreshControl,
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -18,7 +20,7 @@ import { ColorTheme } from "@/types/ColorTheme";
 import ErrorCard from '@/components/ErrorCard'
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/store/store";
-import { creatingAppointment, fetchAllDoctorDropDown, fetchAvailableSlots, fetchDoctorLeaves, setSelectedDoctor } from "@/store/appointmentBookingSlice";
+import { creatingAppointment, fetchAllDoctorDropDown, fetchAvailableSlots, fetchDoctorLeaves, setAvailableSlots, setSelectedDoctor } from "@/store/appointmentBookingSlice";
 import { setSelectedSpecialist } from "@/store/utilsSlice";
 import dayjs from 'dayjs'
 import { useLeavesMessage } from "@/utils/useLeavesMessage";
@@ -40,12 +42,37 @@ export default function BookAppointment() {
   const [showDatePicker, setShowDatePicker] = useState<boolean>(false);
   const [selectedSlot, setSelectedSlot] = useState<any>(null);
   const router = useRouter();
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+
+      if (!selectedDoctor) {
+        await dispatch(fetchAllDoctorDropDown())
+      }
+      if (selectedDoctor?.entityBusinessID) {
+        dispatch(fetchDoctorLeaves(selectedDoctor?.entityBusinessID))
+      }
+      if (selectedDoctor?.entityBusinessID && pickedDate) {
+        dispatch(fetchAvailableSlots({ doctorID: selectedDoctor?.entityBusinessID, appointmentDate: dayjs(pickedDate)?.format("DD-MM-YYYY") }))
+      }
+
+    } catch (error) {
+      console.error("Refresh failed:", error);
+    } finally {
+      setRefreshing(false);
+    }
+  }, []);
+
 
   useFocusEffect(
     React.useCallback(() => {
       return () => {
         dispatch(setSelectedSpecialist(null));
         dispatch(setSelectedDoctor(null));
+        dispatch(setAvailableSlots(null))
+
       };
     }, [dispatch])
   );
@@ -68,7 +95,7 @@ export default function BookAppointment() {
     if (selectedDoctor?.entityBusinessID && pickedDate) {
       dispatch(fetchAvailableSlots({ doctorID: selectedDoctor?.entityBusinessID, appointmentDate: dayjs(pickedDate)?.format("DD-MM-YYYY") }))
     }
-  }, [pickedDate, dispatch])
+  }, [pickedDate, selectedDoctor?.entityBusinessID, dispatch])
 
   // Derived filtered list
   const filteredData = useMemo(() => {
@@ -116,6 +143,10 @@ export default function BookAppointment() {
     const orderResponse = await createOrder(userDetails?.entityBusinessID, selectedDoctor?.opdNewCharges, formData);
     console.log("Order Response -- ", orderResponse);
 
+    if (selectedDoctor?.entityBusinessID && pickedDate) {
+      dispatch(fetchAvailableSlots({ doctorID: selectedDoctor?.entityBusinessID, appointmentDate: dayjs(pickedDate)?.format("DD-MM-YYYY") }))
+    }
+
     var options: any = {
       description: 'Taking first step towards your health.',
       currency: 'INR',
@@ -147,7 +178,18 @@ export default function BookAppointment() {
   }
 
   return (
-    <View style={styles.container}>
+    <ScrollView
+      style={styles.container}
+      showsVerticalScrollIndicator={false}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          colors={[colors.primary]}
+          tintColor={colors.primary}
+        />
+      }
+    >
 
       <Text style={styles.bookingTitle}>Book Your Appointment Today and Take the First Step Toward Better Health</Text>
 
@@ -283,7 +325,7 @@ export default function BookAppointment() {
           minimumDate={new Date()}
         />
       )}
-    </View>
+    </ScrollView>
   );
 }
 
@@ -411,7 +453,8 @@ const dynamicStyles = (colors: ColorTheme) =>
       marginTop: 20,
       alignSelf: "center",
       color: colors.onSurfaceVariant,
-      fontWeight: '500'
+      fontWeight: '500',
+      marginBottom : 20
     },
 
     slotButton: {

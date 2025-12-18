@@ -1,27 +1,10 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import type { AxiosError } from "axios";
-import { changePassword, login, loginOtp, register } from '../api/auth'
+import { changePassword, loginOtp, register } from '../api/auth'
 import { encrypt } from "@/utils/encryption";
 import getStoredValues from "@/utils/getStoredValues";
 import * as SecureStore from 'expo-secure-store'
 
-export const logging = createAsyncThunk(
-    'auth/logging',
-    async ({ mobile, password }: any, { rejectWithValue }) => {
-        try {
-            const { key } = await getStoredValues();
-            const response = await login(mobile, password);
-            if (Object.entries(response)?.length) {
-                const encrypted = encrypt(JSON.stringify(response), key);
-                await SecureStore.setItemAsync("udtl", JSON.stringify(encrypted));
-            }
-            return response
-        } catch (err) {
-            const error = err as AxiosError<any>
-            return rejectWithValue(error.message || "Fetch failed");
-        }
-    }
-);
 
 export const logginViaOTP = createAsyncThunk(
     "auth/logginViaOTP",
@@ -111,9 +94,7 @@ export const authSlice = createSlice({
         })
     },
     extraReducers(builder) {
-        // builder.addCase(logginViaOTP.fulfilled, (state) => {
-        //     state.isAuthenticated = true;
-        // });
+
 
     },
 })

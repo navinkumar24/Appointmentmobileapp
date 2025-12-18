@@ -92,6 +92,9 @@ export const appointmentBookingSlice = createSlice({
     reducers: {
         setSelectedDoctor: (state, action) => {
             state.selectedDoctor = action.payload
+        },
+        setAvailableSlots: (state, action) => {
+            state.allAvailableSlots = action.payload
         }
     },
     extraReducers: (builder) => {
@@ -143,5 +146,5 @@ export const appointmentBookingSlice = createSlice({
     }
 })
 
-export const { setSelectedDoctor } = appointmentBookingSlice.actions
+export const { setSelectedDoctor,setAvailableSlots } = appointmentBookingSlice.actions
 export default appointmentBookingSlice.reducer

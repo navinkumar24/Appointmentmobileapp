@@ -5,34 +5,30 @@ import {
     StyleSheet,
     TouchableOpacity,
     ActivityIndicator,
+    ScrollView,
+    RefreshControl,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import useColorSchemes from "@/themes/ColorSchemes";
 import { ColorTheme } from "@/types/ColorTheme";
-import getenvValues from "@/utils/getenvValues";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/store/store";
 import { setDoctorSpecialitiesPageTitle, setSelectedSpecialist } from "@/store/utilsSlice";
 import { useRouter } from "expo-router";
 import { SvgXml } from "react-native-svg";
+import { fetchAllSpecializations } from "@/store/homeSlice";
 
-/** Sanitize SVG: remove text/title/desc/metadata/script/style, remove stray text nodes,
- * normalize fill/stroke to currentColor and ensure root svg has fill="currentColor".
- */
 function sanitizeSvg(xml: string) {
     if (!xml || typeof xml !== "string") return xml;
     let out = xml;
-
     out = out.replace(/<title[\s\S]*?<\/title>/gi, "");
     out = out.replace(/<desc[\s\S]*?<\/desc>/gi, "");
     out = out.replace(/<metadata[\s\S]*?<\/metadata>/gi, "");
     out = out.replace(/<script[\s\S]*?<\/script>/gi, "");
     out = out.replace(/<style[\s\S]*?<\/style>/gi, "");
     out = out.replace(/<text[\s\S]*?<\/text>/gi, "");
-
     // remove stray text nodes between tags (e.g. > SOME_TEXT <)
     out = out.replace(/>\s*[^<>\s][^<]*\s*</g, "><");
-
     // normalize inline style color values and attributes
     out = out.replace(/fill:\s*#[0-9a-fA-F]{3,6}/gi, "fill:currentColor");
     out = out.replace(/stroke:\s*#[0-9a-fA-F]{3,6}/gi, "stroke:currentColor");
@@ -54,15 +50,33 @@ const ShowAllSpecialities = () => {
     const router = useRouter();
     const dispatch = useDispatch<AppDispatch>();
     const { allSpecializations } = useSelector((state: RootState) => state.home);
-    const { file_service_base_url } = getenvValues();
-
-    // Cache sanitized SVG strings by entityID
     const [svgCache, setSvgCache] = useState<Record<number, string>>({});
-    // Track ids that failed to fetch/sanitize
     const [errorIds, setErrorIds] = useState<Record<number, boolean>>({});
-    // Refs to avoid duplicate fetches and to hold cache between renders
     const fetchingRef = useRef<Record<number, boolean>>({});
     const cacheRef = useRef<Record<number, string>>({});
+    const [refreshing, setRefreshing] = useState(false);
+
+
+    const onRefresh = useCallback(async () => {
+        setRefreshing(true);
+        try {
+            if (!Array.isArray(allSpecializations) || allSpecializations.length === 0) return;
+            for (const item of allSpecializations) {
+                if (!item?.icon) continue;
+                const id = item.entityID;
+                const url = `${item.icon}`;
+                // skip if already cached or errored
+                if (cacheRef.current[id] || errorIds[id]) continue;
+                fetchAndCacheSvg(id, url).catch(() => {
+                });
+            }
+            dispatch(fetchAllSpecializations());
+        } catch (error) {
+            console.error("Refresh failed:", error);
+        } finally {
+            setRefreshing(false);
+        }
+    }, []);
 
     // stable fetch function
     const fetchAndCacheSvg = useCallback(async (id: number, url: string) => {
@@ -90,22 +104,22 @@ const ShowAllSpecialities = () => {
         }
     }, []);
 
-    // Prefetch all SVGs once when specializations arrive.
+    useEffect(() => {
+        dispatch(fetchAllSpecializations());
+    }, [dispatch]);
+
     useEffect(() => {
         if (!Array.isArray(allSpecializations) || allSpecializations.length === 0) return;
         for (const item of allSpecializations) {
             if (!item?.icon) continue;
             const id = item.entityID;
-            const url = `${file_service_base_url}${item.icon}`;
+            const url = `${item.icon}`;
             // skip if already cached or errored
             if (cacheRef.current[id] || errorIds[id]) continue;
             fetchAndCacheSvg(id, url).catch(() => {
-                /* swallow; errors recorded in state */
             });
         }
-        // We intentionally don't include fetchAndCacheSvg in deps to keep stable reference (it's memoized).
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [allSpecializations, file_service_base_url]);
+    }, [allSpecializations]);
 
     return (
         <LinearGradient
@@ -114,58 +128,70 @@ const ShowAllSpecialities = () => {
             end={{ x: 1, y: 1 }}
             style={styles.mainPageContainer}
         >
-            <View style={styles.specialitiesContainer}>
-                <View style={styles.specialitiesGrid}>
-                    {allSpecializations?.map((item) => {
-                        const id = item.entityID;
-                        const svgXml = svgCache[id] ?? cacheRef.current[id];
-                        const hasError = !!errorIds[id];
-                        const isFetching = !!fetchingRef.current[id];
+            <ScrollView
+                showsVerticalScrollIndicator={false}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={onRefresh}
+                        colors={[colors.primary]}
+                        tintColor={colors.primary}
+                    />
+                }
+            >
+                <View style={styles.specialitiesContainer}>
+                    <View style={styles.specialitiesGrid}>
+                        {allSpecializations?.map((item) => {
+                            const id = item.entityID;
+                            const svgXml = svgCache[id] ?? cacheRef.current[id];
+                            const hasError = !!errorIds[id];
+                            const isFetching = !!fetchingRef.current[id];
 
-                        return (
-                            <TouchableOpacity
-                                key={String(id)}
-                                style={styles.specialitiesItemCard}
-                                activeOpacity={0.85}
-                                onPress={() => {
-                                    dispatch(
-                                        setDoctorSpecialitiesPageTitle({
-                                            specializationName: item?.entityBusinessName,
-                                            specializationID: item?.entityBusinessID,
-                                        })
-                                    );
-                                    dispatch(setSelectedSpecialist(item));
-                                    router?.push("/screens/ShowDoctors");
-                                }}
-                            >
-                                {/* Render sanitized SVG if available */}
-                                {svgXml && !hasError ? (
-                                    <SvgXml xml={svgXml} width={50} height={50} color={colors.primary} />
-                                ) : hasError ? (
-                                    <View style={styles.fallbackCircle} />
-                                ) : isFetching ? (
-                                    <ActivityIndicator size="small" color={colors.primary} />
-                                ) : (
-                                    // still not fetched/queued: show loader and kick off fetch
-                                    <ActivityIndicator
-                                        size="small"
-                                        color={colors.primary}
-                                        // start fetch on first render if not yet fetched
-                                        onLayout={() => {
-                                            const url = item?.icon ? `${file_service_base_url}${item.icon}` : null;
-                                            if (url && !fetchingRef.current[id] && !cacheRef.current[id] && !errorIds[id]) {
-                                                fetchAndCacheSvg(id, url).catch(() => { /* swallow */ });
-                                            }
-                                        }}
-                                    />
-                                )}
+                            return (
+                                <TouchableOpacity
+                                    key={String(id)}
+                                    style={styles.specialitiesItemCard}
+                                    activeOpacity={0.85}
+                                    onPress={() => {
+                                        dispatch(
+                                            setDoctorSpecialitiesPageTitle({
+                                                specializationName: item?.entityBusinessName,
+                                                specializationID: item?.entityBusinessID,
+                                            })
+                                        );
+                                        dispatch(setSelectedSpecialist(item));
+                                        router?.push("/screens/ShowDoctors");
+                                    }}
+                                >
+                                    {/* Render sanitized SVG if available */}
+                                    {svgXml && !hasError ? (
+                                        <SvgXml xml={svgXml} width={50} height={50} color={colors.primary} />
+                                    ) : hasError ? (
+                                        <View style={styles.fallbackCircle} />
+                                    ) : isFetching ? (
+                                        <ActivityIndicator size="small" color={colors.primary} />
+                                    ) : (
+                                        // still not fetched/queued: show loader and kick off fetch
+                                        <ActivityIndicator
+                                            size="small"
+                                            color={colors.primary}
+                                            // start fetch on first render if not yet fetched
+                                            onLayout={() => {
+                                                const url = item?.icon ? `${item.icon}` : null;
+                                                if (url && !fetchingRef.current[id] && !cacheRef.current[id] && !errorIds[id]) {
+                                                    fetchAndCacheSvg(id, url).catch(() => { /* swallow */ });
+                                                }
+                                            }}
+                                        />
+                                    )}
 
-                                <Text style={styles.specialitiesItemText}>{item.entityBusinessName}</Text>
-                            </TouchableOpacity>
-                        );
-                    })}
+                                    <Text style={styles.specialitiesItemText}>{item.entityBusinessName}</Text>
+                                </TouchableOpacity>
+                            );
+                        })}
+                    </View>
                 </View>
-            </View>
+            </ScrollView>
         </LinearGradient>
     );
 };
@@ -242,7 +268,7 @@ const dynamicStyles = (colors: ColorTheme) =>
             shadowOffset: { width: 0, height: 6 },
             shadowOpacity: 0.08,
             shadowRadius: 10,
-            elevation: 4,
+            elevation: 1,
         },
         specialitiesItemText: {
             fontSize: 13,

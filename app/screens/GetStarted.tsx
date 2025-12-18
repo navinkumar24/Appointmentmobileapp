@@ -18,6 +18,7 @@ import { ColorTheme } from "@/types/ColorTheme";
 import useColorSchemes from "@/themes/ColorSchemes";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
+import * as SecureStore from 'expo-secure-store'
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -42,9 +43,16 @@ const GetStarted: React.FC = () => {
     if (userDetails && Object.keys(userDetails).length > 0) {
       router.replace("/(drawer)/(tabs)/home");
     }
+    (async() => {
+      const hasSeen = await SecureStore.getItemAsync("GET_STARTED_KEY");
+      if(hasSeen == "true"){
+        router.replace("/screens/login")
+      }
+    })()
   }, [userDetails, router]);
 
-  const handleGetStarted = () => {
+  const handleGetStarted = async () => {
+    await SecureStore.setItemAsync("GET_STARTED_KEY", "true")
     router.push("/screens/login");
   };
 
@@ -115,7 +123,7 @@ const dynamicStyles = (colors: ColorTheme) =>
     },
     title: {
       color: colors.onPrimary,
-      fontSize: 42,
+      fontSize: 35,
       fontWeight: "bold",
       textAlign: "center",
       marginBottom: 16,

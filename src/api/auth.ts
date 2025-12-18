@@ -4,31 +4,6 @@ import getStoredValues from "../utils/getStoredValues";
 import showToast from "../utils/showToast";
 import dayjs from "dayjs";
 
-
-export const login = async (mobile: any, password: any) => {
-    const { token, baseUrl } = await getStoredValues();
-    try {
-        const response = await axios.post(
-            `${baseUrl}/opd/user/login`, {},
-            {
-                headers: {
-                    Authorization: token,
-                    "Content-Type": "application/json",
-                    "mobile": mobile,
-                    "password": password
-                },
-            }
-        );
-        if (response?.data?.success) {
-            showToast("success", "Success", "Logged in Successfully!")
-        }
-        return response?.data?.responseList?.[0];
-    } catch (err) {
-        const error = err as AxiosError<any>;
-        showToast("error", "Error", error?.response?.data?.errorMessage)
-    }
-};
-
 export const loginOtp = async (
     mobile: string,
     accessToken: string

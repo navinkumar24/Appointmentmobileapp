@@ -10,6 +10,7 @@ import {
   Animated,
   Platform,
   ActivityIndicator,
+  RefreshControl
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SvgXml } from 'react-native-svg';
@@ -27,7 +28,6 @@ const CARD_GAP = 14;
 const NUM_COLUMNS = 2;
 const CARD_WIDTH = (width - (NUM_COLUMNS + 1) * CARD_GAP) / NUM_COLUMNS;
 
-/** sanitizeSvg: remove text nodes that break RN, normalize colors, ensure root fill=currentColor */
 function sanitizeSvg(xml: string) {
   if (!xml || typeof xml !== 'string') return xml;
   let out = xml;
@@ -55,23 +55,29 @@ export default function Home() {
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
   const { file_service_base_url } = getenvValues();
-
   const { allSpecializations } = useSelector((s: RootState) => s.home);
-
-
   const [svgCache, setSvgCache] = useState<Record<number, string>>({});
-
   const [loadingIcons, setLoadingIcons] = useState<Record<number, boolean>>({});
-
-  // refs to keep stable maps across renders and avoid re-fetch races
   const svgCacheRef = useRef<Record<number, string>>({});
   const pendingFetchRef = useRef<Record<number, Promise<string | null>>>({});
+  const [refreshing, setRefreshing] = useState(false);
+
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      dispatch(fetchAllSpecializations());
+    } catch (error) {
+      console.error("Refresh failed:", error);
+    } finally {
+      setRefreshing(false);
+    }
+  }, []);
 
   useEffect(() => {
     dispatch(fetchAllSpecializations());
   }, [dispatch]);
 
-  // memoized fetch function (uses refs to avoid repeated requests and race conditions)
   const fetchAndSanitizeSvg = useCallback(async (entityID: number, iconUrl: string) => {
     if (!iconUrl) return null;
 
@@ -116,7 +122,7 @@ export default function Home() {
     (async () => {
       for (const item of allSpecializations) {
         const id = item?.entityID;
-        const iconUrl = item?.icon ? `${file_service_base_url}${item.icon}` : null;
+        const iconUrl = item?.icon ? `${item.icon}` : null;
         if (!id || !iconUrl) continue;
 
         // skip if already cached or currently pending
@@ -129,7 +135,7 @@ export default function Home() {
       }
     })()
 
-  }, [allSpecializations, fetchAndSanitizeSvg, file_service_base_url]);
+  }, [allSpecializations, fetchAndSanitizeSvg]);
 
   function ServiceCard({ title, subtitle, icon, route, bgColors, accent }: any) {
     const scale = useRef(new Animated.Value(1)).current;
@@ -147,7 +153,7 @@ export default function Home() {
         onPress={handlePress}
         onPressIn={pressIn}
         onPressOut={pressOut}
-        style={{ width: '58%' }}
+        style={{ width: '98%' }}
       >
         <Animated.View style={[styles.serviceCard, { transform: [{ scale }] }]}>
           <LinearGradient colors={bgColors} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.serviceInner}>
@@ -165,15 +171,14 @@ export default function Home() {
     );
   }
 
-  // Speciality card: reads from state only; no fetching inside card
   function SpecialityCard({ item }: any) {
     const id = item?.entityID;
     const cachedXml = svgCache[id];
     const loading = loadingIcons[id];
 
-    const onPress = () => {
-      dispatch(setDoctorSpecialitiesPageTitle({ specializationName: item?.entityBusinessName, specializationID: item?.entityBusinessID }));
-      dispatch(setSelectedSpecialist(item));
+    const onPress = async() => {
+      await dispatch(setDoctorSpecialitiesPageTitle({ specializationName: item?.entityBusinessName, specializationID: item?.entityBusinessID }));
+      await dispatch(setSelectedSpecialist(item));
       router?.push('/screens/ShowDoctors');
     };
 
@@ -202,15 +207,23 @@ export default function Home() {
 
   return (
     <LinearGradient colors={[colors.surface, colors.secondaryContainer || colors.surface]} style={styles.container}>
-      <ScrollView contentContainerStyle={{ paddingBottom: 30 }} showsVerticalScrollIndicator={false}>
-        <View style={styles.sectionRow}>
-          <Text style={styles.sectionTitle}>Our Services</Text>
-        </View>
+      <ScrollView
+        contentContainerStyle={{ paddingBottom: 30 }}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={[colors.primary]}
+            tintColor={colors.primary}
+          />
+        }
+      >
 
         <View style={styles.servicesRow}>
           <ServiceCard
-            title="Appointment Booking"
-            subtitle="Find a doctor & book"
+            title="Click & Book your Appointment today"
+            subtitle="Your health, our priority."
             icon={require('../../../assets/images/ourservices/appointmentBooking.png')}
             bgColors={[colors.primaryContainer, colors.surface]}
             accent={colors.primary}
@@ -245,7 +258,7 @@ export default function Home() {
 const dynamicStyles = (colors: ColorTheme) => StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
+    padding: 8,
     backgroundColor: colors.surface,
   },
   sectionRow: {
@@ -266,24 +279,22 @@ const dynamicStyles = (colors: ColorTheme) => StyleSheet.create({
   },
   servicesRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 12,
+    justifyContent: 'center',
   },
   serviceCard: {
     borderRadius: 8,
     overflow: Platform.OS === 'android' ? 'hidden' : 'visible',
     shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.12,
     shadowRadius: 16,
-    elevation: 6,
+    elevation: 2,
   },
   serviceInner: {
     padding: 12,
     flexDirection: 'row',
     alignItems: 'center',
     borderRadius: 10,
-    minHeight: 76,
+    minHeight: 100,
   },
   serviceIconWrap: {
     width: 50,
@@ -303,9 +314,9 @@ const dynamicStyles = (colors: ColorTheme) => StyleSheet.create({
   },
   serviceSubtitle: {
     fontSize: 12,
-    color: colors.onSurface,
+    color: colors.onPrimaryContainer,
     marginTop: 2,
-    fontWeight : '500'
+    fontWeight: '500'
   },
   chev: {
     marginLeft: 8,
@@ -325,11 +336,11 @@ const dynamicStyles = (colors: ColorTheme) => StyleSheet.create({
     padding: 14,
     alignItems: 'center',
     marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
+    shadowColor: colors.onSurface,
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
-    shadowRadius: 10,
-    elevation: 4,
+    shadowRadius: 8,
+    elevation: 1,
   },
   specialityTop: {
     width: 62,

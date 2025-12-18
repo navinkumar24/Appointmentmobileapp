@@ -1,5 +1,5 @@
-import React, { useEffect } from "react";
-import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView } from "react-native";
+import React, { useCallback, useEffect, useState } from "react";
+import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, RefreshControl } from "react-native";
 import useColorSchemes from "@/themes/ColorSchemes";
 import { ColorTheme } from "@/types/ColorTheme";
 import { LinearGradient } from "expo-linear-gradient";
@@ -15,6 +15,21 @@ export default function Profile() {
   const dispatch = useDispatch<AppDispatch>();
   const { userDetails } = useSelector((state: RootState) => state.user);
   const router = useRouter();
+  const [refreshing, setRefreshing] = useState(false);
+
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      dispatch(fetchUserDetails());
+    } catch (error) {
+      console.error("Refresh failed:", error);
+    } finally {
+      setRefreshing(false);
+    }
+  }, []);
+
+
 
   useEffect(() => {
     (async () => {
@@ -23,12 +38,24 @@ export default function Profile() {
   }, [dispatch])
 
   return (
-    <ScrollView showsVerticalScrollIndicator={false}>
+    <ScrollView
+      showsVerticalScrollIndicator={false}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          colors={[colors.primary]}
+          tintColor={colors.primary}
+        />
+      }
+    >
       <LinearGradient
         colors={[colors.surface, colors.secondaryContainer]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.container}
+
+
       >
         {/* HEADER */}
         <View style={styles.headerSection}>
@@ -118,7 +145,7 @@ const dynamicStyles = (colors: ColorTheme) =>
 
     headerSection: {
       alignItems: "center",
-      marginTop: 20,
+      marginTop: 10,
       marginBottom: 12,
     },
 
@@ -126,7 +153,6 @@ const dynamicStyles = (colors: ColorTheme) =>
       width: 110,
       height: 110,
       borderRadius: 60,
-      marginBottom: 12,
       borderWidth: 2,
       borderColor: colors.primary,
     },

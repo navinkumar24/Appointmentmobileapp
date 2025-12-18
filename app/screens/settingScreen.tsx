@@ -25,7 +25,6 @@ import {
     BottomSheetView,
 } from "@gorhom/bottom-sheet";
 import { useRouter } from "expo-router";
-import { setUserDetails } from "@/store/userSlice";
 
 const SettingScreen: React.FC = () => {
     const colors = useColorSchemes();
@@ -50,15 +49,11 @@ const SettingScreen: React.FC = () => {
                     style={styles.screen}
                     showsVerticalScrollIndicator={false}
                 >
-                    {/* ACCOUNT */}
+                  
                     <Text style={styles.sectionTitle}>Account</Text>
                     <View style={styles.card}>
                         <SettingRow icon="person-circle-outline" label="Profile" route={"/(drawer)/(tabs)/profile"} />
-                        <SettingRow icon="key-outline" label="Change Password" route={"/(drawer)/(tabs)/changedPassword"} />
-                        <SettingRow icon="shield-checkmark-outline" label="Security" route={"/(drawer)/(tabs)/security"} />
                     </View>
-
-                   
 
                     {/* APPEARANCE */}
                     <Text style={styles.sectionTitle}>Appearance</Text>
@@ -69,7 +64,6 @@ const SettingScreen: React.FC = () => {
                             value={mode === "dark"}
                             onValueChange={() => dispatch(toggleTheme())}
                         />
-
                         <TouchableOpacity
                             style={styles.settingRowActive}
                             activeOpacity={0.85}
@@ -80,7 +74,6 @@ const SettingScreen: React.FC = () => {
                                 <Text style={styles.itemLabel}>Primary Color</Text>
                                 <Text style={styles.colorDescription}>Tap to choose app color</Text>
                             </View>
-
                             <View
                                 style={[
                                     styles.colorPreview,
@@ -93,27 +86,12 @@ const SettingScreen: React.FC = () => {
                     {/* HELP & ABOUT */}
                     <Text style={styles.sectionTitle}>Help & About</Text>
                     <View style={styles.card}>
-                        <SettingRow icon="help-circle-outline" label="Help Center" route={"/(drawer)/(tabs)/profile"} />
-                        <SettingRow icon="document-text-outline" label="Terms & Conditions" route={"/(drawer)/(tabs)/home"} />
-                        <SettingRow icon="information-circle-outline" label="About App" route={"/(drawer)/(tabs)/home"} />
+                        <SettingRow icon="help-circle-outline" label="Help Center" route={"/screens/HelpCenterScreen"} />
+                        <SettingRow icon="document-text-outline" label="Terms & Conditions" route={"/screens/TermsScreen"} />
+                        <SettingRow icon="information-circle-outline" label="About App" route={"/screens/AboutScreen"} />
                     </View>
 
-                    {/* LOGOUT */}
-                    <TouchableOpacity
-                        style={styles.logoutBtn}
-                        activeOpacity={0.85}
-                        onPress={() => {
-                            dispatch(setUserDetails(null))
-                            router.push("/screens/login")
-                        }} >
-                        <Ionicons name="log-out-outline" size={20} color={colors.error} />
-                        <Text style={styles.logoutText}>Log Out</Text>
-                    </TouchableOpacity>
                 </ScrollView>
-
-                {/* ---------------------------
-            BottomSheetModal (Theme Picker)
-           --------------------------- */}
                 <BottomSheetModal
                     ref={bottomSheetRef}
                     index={0}
@@ -183,10 +161,6 @@ const SettingScreen: React.FC = () => {
 };
 
 export default SettingScreen;
-
-/* -------------------------
-   Helper row components
-   ------------------------- */
 
 const SettingRow = ({ icon, label, route }: { icon: any; label: string, route: string | any }) => {
     const router = useRouter();

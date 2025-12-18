@@ -10,6 +10,7 @@ import {
   Image,
   ScrollView,
   StatusBar,
+  ActivityIndicator,
 } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -29,10 +30,8 @@ export default function Login() {
   const dispatch = useDispatch<AppDispatch>();
   const { mobileNumber } = useSelector((state: RootState) => state.auth)
   const { userDetails } = useSelector((state: RootState) => state.user)
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [loginUsingPassword, setLoginUsingPassword] = useState(false);
-  const { widgetId, tokenAuth } = getenvValues()
+  const { widgetId, tokenAuth } = getenvValues();
+  const [loading, setLoading] = useState<boolean>();
 
   useMemo(() => {
     OTPWidget.initializeWidget(widgetId, tokenAuth);
@@ -63,11 +62,14 @@ export default function Login() {
   };
 
   const handleLogin = async () => {
+    setLoading(true)
     const isvalidNumber = isValidIndianMobileLocal(mobileNumber);
     if (isvalidNumber) {
       await handleSendOtp();
+      setLoading(false)
       router.push('/screens/SignupOtpScreen')
     } else {
+      setLoading(false)
       showToast("error", "Invalid Mobile Number", "Enter a valid mobile number")
     }
   };
@@ -127,36 +129,6 @@ export default function Login() {
                 />
               </View>
 
-              {/* Password Input */}
-              {loginUsingPassword && (
-                <View style={styles.inputContainer}>
-                  <MaterialCommunityIcons name="lock-outline" size={22} color="#666" />
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Password"
-                    secureTextEntry={!showPassword}
-                    value={password}
-                    onChangeText={setPassword}
-                    placeholderTextColor="#888"
-                  />
-                  <MaterialCommunityIcons
-                    name={showPassword ? "eye-off" : "eye"}
-                    size={22}
-                    color="#777"
-                    onPress={() => setShowPassword(!showPassword)}
-                  />
-                </View>
-              )}
-
-              {/* Toggle Login Mode */}
-              <Text
-                style={[styles.toggleText, { color: colors.primary }]}
-                onPress={() => setLoginUsingPassword(!loginUsingPassword)}
-              >
-                {loginUsingPassword
-                  ? "Login using OTP?"
-                  : "Login using password?"}
-              </Text>
 
               {/* Login Button */}
               <TouchableOpacity
@@ -164,7 +136,10 @@ export default function Login() {
                 onPress={handleLogin}
                 activeOpacity={0.85}
               >
-                <Text style={styles.loginButtonText}>Continue</Text>
+                {loading ? <ActivityIndicator size={"small"} color={colors.onPrimary} />
+              :   <Text style={styles.loginButtonText}>Continue</Text>
+              }
+                
               </TouchableOpacity>
             </View>
 

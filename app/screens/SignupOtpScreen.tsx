@@ -4,13 +4,14 @@ import {
     Image,
     KeyboardAvoidingView,
     Platform,
-    SafeAreaView,
     StyleSheet,
     Text,
     TextInput,
     TouchableOpacity,
     View,
     Alert,
+    ActivityIndicator,
+    StatusBar,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
@@ -20,6 +21,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/store/store";
 import { logginViaOTP, setMessage, setOtpAccessToken } from "@/store/authSlice";
 import showToast from "@/utils/showToast";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const OTP_LENGTH = 4;
 const RESEND_INTERVAL = 30; // seconds
@@ -29,6 +31,7 @@ export default function SignupOtpScreen() {
     const router = useRouter();
     const { message, otpAccessToken, mobileNumber, isAuthenticated } = useSelector((state: RootState) => state.auth)
     const dispatch = useDispatch<AppDispatch>();
+    const [loading, setLoading] = useState<boolean>();
 
     const [otp, setOtp] = useState<string[]>(
         Array.from({ length: OTP_LENGTH }).map(() => "")
@@ -122,54 +125,77 @@ export default function SignupOtpScreen() {
             }
         }
     };
-
     const handleFocus = (index: number) => {
         setFocusedIndex(index);
     };
-
     const handleBlur = () => {
         setFocusedIndex(null);
     };
 
     const handleVerify = async () => {
         const code = otp.join("");
+
         if (code.length !== OTP_LENGTH || !/^\d+$/.test(code)) {
-            Alert.alert("Invalid Code", `Please enter the ${OTP_LENGTH}-digit verification code.`);
-            return;
+            Alert.alert(
+                "Invalid Code",
+                `Please enter the ${OTP_LENGTH}-digit verification code.`
+            );
+            return { success: false };
         }
-        const body = {
-            reqId: message,
-            otp: code
+
+        try {
+            const body = {
+                reqId: message,
+                otp: code,
+            };
+
+            const response = await OTPWidget.verifyOTP(body);
+
+            if (response?.type === "success") {
+                await dispatch(setOtpAccessToken(response.message));
+                return { success: true, accessToken: response.message };
+            }
+
+            showToast("error", "Error", response?.message || "OTP verification failed");
+            return { success: false, message: response?.message };
+
+        } catch (error) {
+            console.error("OTP verification error:", error);
+            showToast("error", "Error", "Unable to verify OTP");
+            return { success: false };
         }
-        const response = await OTPWidget.verifyOTP(body);
-        if (response?.type == "success") {
-            await dispatch(setOtpAccessToken(response.message));
-        }
-        if (response?.type == "error") {
-            showToast("error", "Error", response.message)
-        }
-        return response
     };
     const handleTryForLogin = async () => {
+        // Validate first — no loading spinner yet
+        const verifyResult = await handleVerify();
+        if (!verifyResult.success) return;
+
+        setLoading(true);
+
         try {
-            const res = await handleVerify();
-            if (res.type != "success") {
-                return;
-            }
-            console.log("REdddd --- ", res)
-            const result = await dispatch(logginViaOTP({ mobile: mobileNumber, accessToken: res?.message })).unwrap();
-            // // 3. Safe to access result
-            console.log("TRY result -- ", result)
-            if (result?.statusCode == 200) {
+            const result = await dispatch(
+                logginViaOTP({
+                    mobile: mobileNumber,
+                    accessToken: verifyResult.accessToken,
+                })
+            ).unwrap();
+
+            if (result?.statusCode === 200) {
                 router.replace("/(drawer)/(tabs)/home");
-            } else if (result?.statusCode == 404) {
-                router.replace("/screens/SignupFormScreen")
+            } else if (result?.statusCode === 404) {
+                router.replace("/screens/SignupFormScreen");
+            } else {
+                Alert.alert("Login Failed", "Unexpected response from server");
             }
+
         } catch (error: any) {
             console.error("Login failed:", error);
             Alert.alert("Login Failed", error?.message || "Something went wrong");
+        } finally {
+            setLoading(false);
         }
     };
+
 
 
     const handleResend = async () => {
@@ -211,11 +237,11 @@ export default function SignupOtpScreen() {
         .padStart(2, "0")}:${(countdown % 60).toString().padStart(2, "0")}`;
 
     return (
-        <SafeAreaView style={styles.container}>
-            <LinearGradient
-                colors={[colors.primaryContainer, colors.secondaryContainer]}
-                style={styles.gradient}
-            >
+        <LinearGradient
+            colors={[colors.primaryContainer, colors.secondaryContainer]}
+            style={styles.gradient}
+        >
+            <SafeAreaView style={styles.container}>
                 <KeyboardAvoidingView
                     style={styles.wrapper}
                     behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -227,7 +253,7 @@ export default function SignupOtpScreen() {
                             style={styles.heroImage}
                             resizeMode="contain"
                         />
-                        <Text style={[styles.brandTitle, { color: colors.onSurface }]}>
+                        <Text style={[styles.brandTitle, { color: colors.onPrimary }]}>
                             Verify & Secure
                         </Text>
                         <Text style={[styles.brandSubtitle, { color: colors.primary }]}>
@@ -296,10 +322,15 @@ export default function SignupOtpScreen() {
                             onPress={handleTryForLogin}
                         >
                             <LinearGradient
-                                colors={[colors.primary, colors.secondaryContainer]}
+                                colors={[colors.primary, colors.primary]}
                                 style={styles.verifyGradient}
                             >
-                                <Text style={styles.verifyText}>Verify & Continue</Text>
+                                {
+                                    loading ? <ActivityIndicator size={"small"} color={colors.onPrimary} />
+                                        : <Text style={styles.verifyText}>Verify & Continue</Text>
+                                }
+
+
                             </LinearGradient>
                         </TouchableOpacity>
 
@@ -326,12 +357,12 @@ export default function SignupOtpScreen() {
                         </View>
 
                         <Text style={[styles.tipsText, { color: colors.onSurface }]}>
-                            Tip: You can paste the code directly if your keyboard filled it automatically.
+                            If you are unable to receive OTP then please re-check you mobile number again.
                         </Text>
                     </View>
                 </KeyboardAvoidingView>
-            </LinearGradient>
-        </SafeAreaView>
+            </SafeAreaView>
+        </LinearGradient>
     );
 }
 
@@ -339,7 +370,6 @@ const styles = StyleSheet.create({
     container: { flex: 1 },
     gradient: { flex: 1, paddingHorizontal: 20, paddingTop: 16 },
     wrapper: { flex: 1, justifyContent: "center" },
-
     hero: { alignItems: "center", marginBottom: 10 },
     heroImage: { width: 220, height: 160, marginBottom: 8 },
     brandTitle: { fontSize: 22, fontWeight: "700" },

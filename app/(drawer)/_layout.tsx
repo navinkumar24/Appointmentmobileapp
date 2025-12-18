@@ -11,6 +11,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { setDoctorSpecialitiesPageTitle } from "@/store/utilsSlice";
 import { useEffect } from "react";
 import { fetchUserDetails, setUserDetails } from "@/store/userSlice";
+import getenvValues from "@/utils/getenvValues";
 
 
 const MENU_ITEMS = [
@@ -18,7 +19,6 @@ const MENU_ITEMS = [
     { id: 2, label: "Our Doctors", icon: "doctor", route: "/screens/ShowDoctors" },
     { id: 3, label: "My Appointment", icon: "calendar-month", route: "(tabs)/appointment" },
     { id: 4, label: "Settings", icon: "cog-outline", route: "/screens/settingScreen" },
-    { id: 5, label: "Log Out", icon: "logout", route: "/screens/login" },
 ];
 
 export default function DrawerLayout() {
@@ -32,6 +32,7 @@ export default function DrawerLayout() {
     const toggleDarkMode = () => {
         dispatch(toggleTheme())
     };
+    const {companyMobile, companyName, companyGmail} = getenvValues();
 
     useEffect(() => {
         dispatch(fetchUserDetails());
@@ -80,6 +81,8 @@ export default function DrawerLayout() {
                             <Text style={[styles.menuLabel, { color: colors.onSurface }]}>{item.label}</Text>
                         </TouchableOpacity>
                     ))}
+
+
                     {/* Dark Mode Toggle */}
                     <View style={styles.menuItem}>
                         <MaterialCommunityIcons
@@ -98,6 +101,19 @@ export default function DrawerLayout() {
                             style={{ marginLeft: 'auto' }}
                         />
                     </View>
+                    <TouchableOpacity
+                        key={5}
+                        style={[styles.menuItem]}
+                        onPress={async () => { router.push("/screens/login") }}
+                        activeOpacity={0.8}
+                    >
+                        <MaterialCommunityIcons
+                            name={"logout"}
+                            size={26}
+                            color={colors.error}
+                        />
+                        <Text style={[styles.menuLabel, { color: colors.error }]}>{"Logout"}</Text>
+                    </TouchableOpacity>
                 </View>
 
                 {/* Divider */}
@@ -107,11 +123,11 @@ export default function DrawerLayout() {
                 <View style={styles.contactContainer}>
                     <TouchableOpacity style={styles.menuItem} activeOpacity={0.8}>
                         <MaterialCommunityIcons name="phone-outline" size={24} color={colors.primary} />
-                        <Text style={[styles.menuLabel, { color: colors.onSurface }]}>+91 8546859854</Text>
+                        <Text style={[styles.menuLabel, { color: colors.onSurface }]}>{companyMobile}</Text>
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.menuItem} activeOpacity={0.8}>
                         <MaterialCommunityIcons name="gmail" size={24} color={colors.primary} />
-                        <Text style={[styles.menuLabel, { color: colors.onSurface }]}>icare@gmail.com</Text>
+                        <Text style={[styles.menuLabel, { color: colors.onSurface }]}>{companyGmail}</Text>
                     </TouchableOpacity>
                 </View>
             </LinearGradient>
@@ -129,7 +145,7 @@ export default function DrawerLayout() {
                 headerStyle: {
                     backgroundColor: colors.primary,
                 },
-                headerTitle: "GS NueroScience",
+                headerTitle: companyName,
                 headerTintColor: colors.onPrimary,
                 headerRight: () => (
                     <TouchableOpacity

@@ -1,5 +1,5 @@
 // ShowDoctors.tsx
-import React, { useEffect, useMemo } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   Image,
   TouchableOpacity,
   ScrollView,
+  RefreshControl,
 } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import useColorSchemes from "@/themes/ColorSchemes";
@@ -25,15 +26,30 @@ export default function ShowDoctors() {
   const { allDoctors } = useSelector((state: RootState) => state.appointmentBooking);
   const { doctorSpecialitiesPageTitle, selectedSpecialist } = useSelector((state: RootState) => state.utils)
   const insets = useSafeAreaInsets();
-  const dispatch = useDispatch<AppDispatch>()
+  const dispatch = useDispatch<AppDispatch>();
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+        if (doctorSpecialitiesPageTitle || selectedSpecialist) {
+          await dispatch(fetchAllDoctorDropDown(doctorSpecialitiesPageTitle?.specializationID ?? selectedSpecialist?.specializationID))
+        }
+    } catch (error) {
+      console.error("Refresh failed:", error);
+    } finally {
+      setRefreshing(false);
+    }
+  }, []);
+
 
   useEffect(() => {
     (async () => {
       if (doctorSpecialitiesPageTitle || selectedSpecialist) {
-        await dispatch(fetchAllDoctorDropDown(selectedSpecialist?.entityBusinessID ?? doctorSpecialitiesPageTitle?.specializationID))
+        await dispatch(fetchAllDoctorDropDown(doctorSpecialitiesPageTitle?.specializationID ?? selectedSpecialist?.specializationID))
       }
     })();
-  }, [dispatch])
+  }, [doctorSpecialitiesPageTitle, selectedSpecialist])
 
   return (
 
@@ -47,8 +63,15 @@ export default function ShowDoctors() {
         style={{ flex: 1 }}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: insets.bottom + 30 }}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={[colors.primary]}
+            tintColor={colors.primary}
+          />
+        }
       >
-        <Text style={styles.headerTitle}>Our Doctors</Text>
         {
           allDoctors?.map((item) => (
             <DoctorCard key={item?.entityID} doctor={item} colors={colors} styles={styles} />
@@ -83,8 +106,8 @@ function DoctorCard({ doctor, colors, styles }: { doctor: any, colors: ColorThem
   return (
     <View style={styles.card}>
       <View style={styles.rowTop}>
-        {doctor?.avatar ? (
-          <Image source={{ uri: doctor?.avatar }} style={styles.avatar} />
+        {doctor?.doctorImagePath ? (
+          <Image source={{ uri: doctor?.doctorImagePath }} style={styles.avatar} />
         ) : (
           <View style={[styles.avatarFallback, { backgroundColor: colors.primaryContainer }]}>
             <Text style={[styles.avatarInitial, { color: colors.onPrimaryContainer }]}>{initials}</Text>
@@ -98,15 +121,13 @@ function DoctorCard({ doctor, colors, styles }: { doctor: any, colors: ColorThem
           <Text style={styles.specialization} numberOfLines={1}>
             {doctor.specializationName}
           </Text>
-
-          <View style={styles.metaRow}>
-            <Ionicons name="time-outline" size={14} color={colors.onSurfaceVariant} />
-            <Text style={styles.metaText}>{doctor.experienceYears ?? "—"} yrs</Text>
-
-            <View style={{ width: 12 }} />
-
-            <Ionicons name="star" size={14} color={colors.secondary} />
-            <Text style={styles.metaText}>{doctor.rating?.toFixed(1) ?? "—"}</Text>
+          <View style={{ flexDirection: 'row', alignItems: "center", gap: 5 }}>
+            <Text style={[styles.specialization, { fontWeight: '500' }]}>
+              Charge :
+            </Text>
+            <Text style={styles.specialization} numberOfLines={1}>
+              {"₹ " + doctor.opdNewCharges}
+            </Text>
           </View>
         </View>
 
@@ -218,7 +239,7 @@ const dynamicStyles = (colors: ColorTheme) =>
     bookBtn: {
       flexDirection: "row",
       alignItems: "center",
-      paddingVertical: 6,
+      paddingVertical: 8,
       paddingHorizontal: 8,
       borderRadius: 4,
       backgroundColor: colors.primary,

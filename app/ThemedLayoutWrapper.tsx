@@ -12,8 +12,6 @@ function ThemedLayoutWrapper() {
 
 
 
-
-
   return (
     <Stack>
       <Stack.Screen name="index" options={{ headerShown: false }} />
@@ -23,7 +21,7 @@ function ThemedLayoutWrapper() {
       <Stack.Screen name="screens/SignupFormScreen" options={{ headerShown: false }} />
       <Stack.Screen name="screens/ForgotPassword" options={{ headerShown: false }} />
       <Stack.Screen name="screens/GetStarted" options={{ headerShown: false }} />
-
+      
       <Stack.Screen
         name="screens/BookAppointment"
         options={{
@@ -74,6 +72,31 @@ function ThemedLayoutWrapper() {
           headerTintColor: colors.onPrimary,
         }}
       />
+      <Stack.Screen
+        name="screens/AboutScreen"
+        options={{
+          title: "About Us",
+          headerStyle: { backgroundColor: colors.primary },
+          headerTintColor: colors.onPrimary,
+        }}
+      />
+      <Stack.Screen
+        name="screens/TermsScreen"
+        options={{
+          title: "Terms & Conditions",
+          headerStyle: { backgroundColor: colors.primary },
+          headerTintColor: colors.onPrimary,
+        }}
+      />
+      <Stack.Screen
+        name="screens/HelpCenterScreen"
+        options={{
+          title: "Help Center",
+          headerStyle: { backgroundColor: colors.primary },
+          headerTintColor: colors.onPrimary,
+        }}
+      />
+
 
       <Stack.Screen name="(drawer)" options={{ headerShown: false }} />
     </Stack>

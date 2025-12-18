@@ -1,5 +1,5 @@
 // app/screens/Appointment.tsx
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -9,6 +9,7 @@ import {
   Animated,
   ActivityIndicator,
   LayoutAnimation,
+  RefreshControl,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import useColorSchemes from "@/themes/ColorSchemes";
@@ -51,11 +52,26 @@ const Appointment = () => {
   const { allBookedAppointments, loading } = useSelector((s: RootState) => s.appointmentBooking);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [activeFilter, setActiveFilter] = useState<"upcoming" | "past">("upcoming");
+  const [refreshing, setRefreshing] = useState(false);
 
-  // animation values per item key
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      if (userDetails?.entityBusinessID) {
+        await dispatch(fetchBookedAppointments(userDetails.entityBusinessID));
+      }
+
+    } catch (error) {
+      console.error("Refresh failed:", error);
+    } finally {
+      setRefreshing(false);
+    }
+  }, []);
+
+
+
   const animatedValues = useRef<Record<string, Animated.Value>>({}).current;
-
-  // when component mounts, fetch via redux
   useEffect(() => {
     (async () => {
       if (userDetails?.entityBusinessID) {
@@ -64,7 +80,6 @@ const Appointment = () => {
     })();
   }, [userDetails?.entityBusinessID]);
 
-  // Create Animated.Value for new items and trigger staggered animation
   useEffect(() => {
     const keys = allBookedAppointments?.map(keyFor);
     const animations: Animated.CompositeAnimation[] = [];
@@ -167,15 +182,12 @@ const Appointment = () => {
   const filteredAppointments = allBookedAppointments?.filter(item => {
     const appointmentDate = parseDDMMYYYY(item.appointmentDate);
     appointmentDate.setHours(0, 0, 0, 0);
-
     if (activeFilter === "upcoming") {
       return appointmentDate >= today;
     }
-
     if (activeFilter === "past") {
       return appointmentDate < today;
     }
-
     return true;
   });
 
@@ -187,7 +199,18 @@ const Appointment = () => {
       end={{ x: 1, y: 1 }}
       style={styles.mainPageContainer}
     >
-      <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
+      <ScrollView style={{ flex: 1 }}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={[colors.primary]}
+            tintColor={colors.primary}
+          />
+        }
+
+      >
         <Text style={styles.sectionTitle}>My Appointments</Text>
         <FilterToggle
           activeFilter={activeFilter}

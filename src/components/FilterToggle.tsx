@@ -115,7 +115,7 @@ export default function FilterToggle({
                 accessibilityState={{ selected: isActive }}
                 style={[styles.tabWrapper, tabStyle]}
             >
-                <Animated.View style={{ transform: [{ scale }] }}>
+                <Animated.View style={{ transform: [{ scale }], flexDirection : 'row', alignItems : "center", justifyContent : "center" }}>
                     <Text style={[styles.tabText, { color: colors.onSurface }, isActive && { color: colors.onPrimary }]}>
                         {label}
                     </Text>
@@ -128,7 +128,7 @@ export default function FilterToggle({
     const indicatorStyle = {
         position: "absolute" as const,
         height: 36,
-        borderRadius: 5,
+        borderRadius: 19,
         top: 4,
         width: indicatorWidth,
         transform: [{ translateX }],
@@ -153,21 +153,24 @@ export default function FilterToggle({
 
 const styles = StyleSheet.create({
     container: {
-        padding: 4,
+        padding: 2,
         borderRadius: 7,
         position: "relative",
         overflow: "visible",
+        flexDirection : 'row',
+        alignItems : "center"
     },
     row: {
         flexDirection: "row",
         alignItems: "center",
+        justifyContent : 'center'
     },
     tabWrapper: {
         flex: 1,
         paddingVertical: 10,
         alignItems: "center",
         justifyContent: "center",
-        borderRadius: 8,
+        borderRadius: 10,
     },
     tabText: {
         fontSize: 14,
