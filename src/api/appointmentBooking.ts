@@ -172,3 +172,51 @@ export const createOrder = async (userID: number | string, amount: number | stri
         showToast("error", "Error", error?.response?.data?.errorMessage)
     }
 };
+export const canReschedule: any = async () => {
+    const { token, baseUrl } = await getStoredValues();
+    try {
+        const response = await axios.get(`${baseUrl}/opd/appointment/canReschedule`,
+            {
+                headers: {
+                    Authorization: token,
+                    "Content-Type": "application/json",
+                },
+            }
+        );
+
+        return response?.data
+    } catch (err) {
+        const error = err as AxiosError<any>;
+        console.log("Can Reschedule -- ", error?.response?.data)
+        showToast("error", "Error", error?.response?.data?.errorMessage)
+    }
+};
+export const rescheduleAppointment: any = async (formData: any) => {
+    const { token, baseUrl } = await getStoredValues();
+    try {
+        const response = await axios.post(`${baseUrl}/opd/appointment/rescheduleAppointment`,
+            {
+                "rescheduleRequest": {
+                    "appointmentID": formData?.appointmentID,
+                    "startTime": formData?.startTime,
+                    "endTime": formData?.endTime,
+                    "newAppointmentDate": formData?.newAppointmentDate
+                }
+            },
+            {
+                headers: {
+                    Authorization: token,
+                    "Content-Type": "application/json",
+                },
+            }
+        );
+
+        console.log("Data -- ", response?.data)
+
+        return response?.data?.responseList
+    } catch (err) {
+        const error = err as AxiosError<any>;
+        console.log("Reschedule Error -- ", error?.response?.data)
+        showToast("error", "Error", error?.response?.data?.errorMessage)
+    }
+};

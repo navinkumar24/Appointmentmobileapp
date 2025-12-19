@@ -1,5 +1,5 @@
 // app/screens/GetStarted.tsx
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo } from "react";
 import {
   StatusBar,
   View,
@@ -12,13 +12,14 @@ import {
   Animated,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { useSelector } from "react-redux";
-import { RootState } from "@/store/store";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "@/store/store";
 import { ColorTheme } from "@/types/ColorTheme";
 import useColorSchemes from "@/themes/ColorSchemes";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import * as SecureStore from 'expo-secure-store'
+import { fetchUserDetails } from "@/store/userSlice";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -27,6 +28,7 @@ const GetStarted: React.FC = () => {
   const { userDetails } = useSelector((state: RootState) => state.user);
   const colors = useColorSchemes();
   const styles = dynamicStyles(colors);
+  const dispatch = useDispatch<AppDispatch>();
 
   // Animation for fade-in effect
   const fadeAnim = new Animated.Value(0);
@@ -43,9 +45,9 @@ const GetStarted: React.FC = () => {
     if (userDetails && Object.keys(userDetails).length > 0) {
       router.replace("/(drawer)/(tabs)/home");
     }
-    (async() => {
+    (async () => {
       const hasSeen = await SecureStore.getItemAsync("GET_STARTED_KEY");
-      if(hasSeen == "true"){
+      if (hasSeen == "true") {
         router.replace("/screens/login")
       }
     })()

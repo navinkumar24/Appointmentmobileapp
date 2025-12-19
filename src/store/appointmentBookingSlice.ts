@@ -1,6 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import type { AxiosError } from "axios";
-import { createAppointment, getAllDoctorDropDown, getAvailableSlots, getBookedAppointments, getDoctorLeaves } from "../api/appointmentBooking";
+import { createAppointment, getAllDoctorDropDown, getAvailableSlots, getBookedAppointments, getDoctorLeaves, rescheduleAppointment } from "../api/appointmentBooking";
 
 
 
@@ -65,6 +65,18 @@ export const fetchBookedAppointments = createAsyncThunk(
         }
     }
 )
+export const reschedulingAppointment = createAsyncThunk(
+    'home/fetchBookedAppointments',
+    async (formData: any, { rejectWithValue }) => {
+        try {
+            const response = rescheduleAppointment(formData);
+            return response;
+        } catch (err) {
+            const error = err as AxiosError<any>
+            rejectWithValue(error?.message)
+        }
+    }
+)
 
 type InitialState = {
     allDoctors: any[];
@@ -72,6 +84,7 @@ type InitialState = {
     allAvailableSlots: any[];
     allBookedAppointments: any[];
     selectedDoctor: any | null,
+    rescheduleAppointmentDetails: any;
     loading: boolean;
     error: string | any
 }
@@ -82,6 +95,7 @@ const initialState: InitialState = {
     allAvailableSlots: [],
     allBookedAppointments: [],
     selectedDoctor: null,
+    rescheduleAppointmentDetails: null,
     loading: false,
     error: null,
 }
@@ -95,6 +109,9 @@ export const appointmentBookingSlice = createSlice({
         },
         setAvailableSlots: (state, action) => {
             state.allAvailableSlots = action.payload
+        },
+        setRescheduleAppointmentDetails: (state, action) => {
+            state.rescheduleAppointmentDetails = action.payload
         }
     },
     extraReducers: (builder) => {
@@ -146,5 +163,5 @@ export const appointmentBookingSlice = createSlice({
     }
 })
 
-export const { setSelectedDoctor,setAvailableSlots } = appointmentBookingSlice.actions
+export const { setSelectedDoctor, setAvailableSlots, setRescheduleAppointmentDetails } = appointmentBookingSlice.actions
 export default appointmentBookingSlice.reducer

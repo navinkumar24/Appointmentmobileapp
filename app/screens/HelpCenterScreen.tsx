@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -8,13 +8,15 @@ import {
   Pressable,
   RefreshControl,
   Linking,
-  StatusBar,
 } from 'react-native';
 import * as Animatable from 'react-native-animatable';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons, Entypo } from '@expo/vector-icons';
 import useColorSchemes from '@/themes/ColorSchemes';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch, RootState } from '@/store/store';
+import { canRescheduleAppoint } from '@/store/utilsSlice';
+import getenvValues from '@/utils/getenvValues';
 
 const SectionCard: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => {
   const colors = useColorSchemes()
@@ -46,22 +48,29 @@ const FAQItem: React.FC<{ question: string; answer: string }> = ({ question, ans
 
 const HelpCenterScreen: React.FC = () => {
   const [refreshing, setRefreshing] = useState(false);
-  const colors = useColorSchemes()
+  const colors = useColorSchemes();
+  const { canReschedule } = useSelector((state: RootState) => state.utils);
+  const dispatch = useDispatch<AppDispatch>();
+  const { companyGmail, companyMobile } = getenvValues()
+  useEffect(() => {
+    dispatch(canRescheduleAppoint())
+  }, [])
 
   const faqs = [
     {
       question: 'How do I book an appointment?',
       answer:
-        'Open the Services page, choose a service, select an available slot and confirm. You will receive a confirmation in-app and by email.',
+        'Go to the Home page, click on the first section you will see "Click & Book your Appointment Today", click on this section , select Doctor and choose date, then select an available slot and Proceed to pay. Now you have booked your Appointment. you can check in My Appointment Section and you can download Invoice',
     },
     {
-      question: 'Can I reschedule or cancel?',
+      question: 'Can I reschedule?',
       answer:
-        'Yes — open the "My Appointments" tab, pick the appointment and choose reschedule or cancel. Fees may apply depending on the provider policy.',
+        canReschedule ? 'Yes — open the "My Appointments" tab, pick the appointment and choose reschedule or cancel. Fees may apply depending on the provider policy.'
+          : "No — you can't reschedule or cancel once booked.",
     },
     {
       question: 'How do I contact support?',
-      answer: 'Use the contact form in this screen or write to support@yourdomain.com. For urgent matters call +1 555 123 4567.',
+      answer: `Use the contact form in this screen or write to ${companyGmail}. For urgent matters call ${companyMobile}`,
     },
   ];
 
@@ -92,12 +101,12 @@ const HelpCenterScreen: React.FC = () => {
           </Text>
 
           <View style={styles.row}>
-            <Pressable style={[styles.button, { backgroundColor: colors.primary, shadowColor: colors.onSurface, }]} onPress={() => Linking.openURL('mailto:support@yourdomain.com')}>
+            <Pressable style={[styles.button, { backgroundColor: colors.primary, shadowColor: colors.onSurface, }]} onPress={() => Linking.openURL(`mailto:${companyGmail}`)}>
               <Entypo name="email" size={18} color={colors.onPrimary} />
               <Text style={[styles.buttonText, { color: colors.onPrimary }]}> Email Support</Text>
             </Pressable>
 
-            <Pressable style={[styles.button, { marginLeft: 12, backgroundColor: colors.primary, shadowColor: colors.onSurface, }]} onPress={() => Linking.openURL('tel:+15551234567')}>
+            <Pressable style={[styles.button, { marginLeft: 12, backgroundColor: colors.primary, shadowColor: colors.onSurface, }]} onPress={() => Linking.openURL(`tel:${companyMobile}`)}>
               <MaterialIcons name="call" size={18} color={colors.onPrimary} />
               <Text style={[styles.buttonText, { color: colors.onPrimary }]}> Call Us</Text>
             </Pressable>
@@ -120,7 +129,7 @@ export default HelpCenterScreen;
 // Shared styles used by all three components
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  header: { padding: 16, borderBottomWidth: StyleSheet.hairlineWidth,},
+  header: { padding: 16, borderBottomWidth: StyleSheet.hairlineWidth, },
   headerTitle: { fontSize: 18, fontWeight: '700' },
   content: { flex: 1 },
   gradient: { flex: 1, paddingHorizontal: 6, paddingTop: 16 },
@@ -138,7 +147,7 @@ const styles = StyleSheet.create({
   bodyText: { fontSize: 14, color: '#333', lineHeight: 20 },
 
   row: { flexDirection: 'row', marginTop: 12, alignItems: 'center' },
-  button: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 10, borderRadius: 8},
+  button: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 10, borderRadius: 8 },
   buttonText: { marginLeft: 6, fontWeight: '600' },
 
   faqItem: {
@@ -157,7 +166,7 @@ const styles = StyleSheet.create({
 
   tncHeading: { fontSize: 15, fontWeight: '700', marginBottom: 6 },
 
-  aboutHero: { flexDirection: 'row', alignItems: 'center',  padding: 14, borderRadius: 12, marginBottom: 12 },
+  aboutHero: { flexDirection: 'row', alignItems: 'center', padding: 14, borderRadius: 12, marginBottom: 12 },
   logoPlaceholder: { width: 64, height: 64, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
   appName: { fontSize: 18, fontWeight: '700' },
   appVersion: { fontSize: 13, color: '#666' },

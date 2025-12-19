@@ -64,7 +64,7 @@ export default function Profile() {
             style={styles.avatar}
           />
           <Text style={styles.userName}>Hi, {userDetails?.entityBusinessName}</Text>
-          <TouchableOpacity style={styles.editButton} activeOpacity={0.8}>
+          <TouchableOpacity style={styles.editButton} activeOpacity={0.8} onPress={() => router.push("/screens/UpdateProfile")}>
             <Ionicons name="create-outline" size={18} color={colors.onPrimary} />
             <Text style={styles.editButtonText}>Edit Profile</Text>
           </TouchableOpacity>

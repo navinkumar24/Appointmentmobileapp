@@ -169,9 +169,7 @@ export default function SignupOtpScreen() {
         // Validate first — no loading spinner yet
         const verifyResult = await handleVerify();
         if (!verifyResult.success) return;
-
         setLoading(true);
-
         try {
             const result = await dispatch(
                 logginViaOTP({
@@ -196,22 +194,18 @@ export default function SignupOtpScreen() {
         }
     };
 
-
-
     const handleResend = async () => {
         if (!isResendAvailable) return;
         setInfoMessage("A fresh code has been sent. Check your messages.");
-
-
         const body = {
             reqId: message,
-            retryChannel: 11 // Retry channel code (here, SMS:11)
+            retryChannel: 11 
         }
+        console.log("Resend OTP Body -- ", body)
         const response = await OTPWidget.retryOTP(body);
         if (response?.type == "success") {
-            dispatch(setMessage(response?.message))
+            await dispatch(setMessage(response?.message))
         }
-        console.log(response);
 
         setIsResendAvailable(false);
         setCountdown(RESEND_INTERVAL);

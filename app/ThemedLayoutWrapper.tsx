@@ -4,12 +4,10 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 
 
-
 function ThemedLayoutWrapper() {
   const colors = useColorSchemes();
   const { doctorSpecialitiesPageTitle } = useSelector((state: RootState) => state.utils);
   const { userDetails } = useSelector((state: RootState) => state.user);
-
 
 
   return (
@@ -96,7 +94,22 @@ function ThemedLayoutWrapper() {
           headerTintColor: colors.onPrimary,
         }}
       />
-
+      <Stack.Screen
+        name="screens/UpdateProfile"
+        options={{
+          title: "Update Profile",
+          headerStyle: { backgroundColor: colors.primary },
+          headerTintColor: colors.onPrimary,
+        }}
+      />
+      <Stack.Screen
+        name="screens/RescheduleAppointment"
+        options={{
+          title: "Reschedule Appointment",
+          headerStyle: { backgroundColor: colors.primary },
+          headerTintColor: colors.onPrimary,
+        }}
+      />
 
       <Stack.Screen name="(drawer)" options={{ headerShown: false }} />
     </Stack>

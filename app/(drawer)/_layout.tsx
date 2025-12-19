@@ -15,10 +15,13 @@ import getenvValues from "@/utils/getenvValues";
 
 
 const MENU_ITEMS = [
-    { id: 1, label: "Home", icon: "home", route: "(tabs)/home" },
+    { id: 1, label: "Home", icon: "home-outline", route: "(tabs)/home" },
     { id: 2, label: "Our Doctors", icon: "doctor", route: "/screens/ShowDoctors" },
-    { id: 3, label: "My Appointment", icon: "calendar-month", route: "(tabs)/appointment" },
+    { id: 3, label: "My Appointment", icon: "calendar-check-outline", route: "(tabs)/appointment" },
     { id: 4, label: "Settings", icon: "cog-outline", route: "/screens/settingScreen" },
+    { id: 5, label: "Help Center", icon: "lifebuoy", route: "/screens/HelpCenterScreen" },
+    { id: 6, label: "About App", icon: "information-outline", route: "/screens/AboutScreen" },
+    { id: 7, label: "Terms & Conditions", icon: "file-document-outline", route: "/screens/TermsScreen" },
 ];
 
 export default function DrawerLayout() {
@@ -32,11 +35,15 @@ export default function DrawerLayout() {
     const toggleDarkMode = () => {
         dispatch(toggleTheme())
     };
-    const {companyMobile, companyName, companyGmail} = getenvValues();
-
+    const { companyMobile, companyName, companyGmail } = getenvValues();
     useEffect(() => {
         dispatch(fetchUserDetails());
     }, [])
+
+    const handleLogout = async () => {
+        await dispatch(setUserDetails(null));
+        router.push("/screens/login")
+    }
 
     const renderDrawerContent = () => {
         return (
@@ -65,9 +72,6 @@ export default function DrawerLayout() {
                             onPress={async () => {
                                 if (item?.id === 2) {
                                     await dispatch(setDoctorSpecialitiesPageTitle({ specializationName: "All Doctors", specializationID: null }))
-                                }
-                                if (item?.id === 5) {
-                                    await dispatch(setUserDetails(null))
                                 }
                                 router.push(item?.route)
                             }}
@@ -104,7 +108,7 @@ export default function DrawerLayout() {
                     <TouchableOpacity
                         key={5}
                         style={[styles.menuItem]}
-                        onPress={async () => { router.push("/screens/login") }}
+                        onPress={handleLogout}
                         activeOpacity={0.8}
                     >
                         <MaterialCommunityIcons

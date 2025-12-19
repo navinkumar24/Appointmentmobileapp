@@ -10,17 +10,20 @@ import {
   ActivityIndicator,
   LayoutAnimation,
   RefreshControl,
+  TouchableOpacity,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import useColorSchemes from "@/themes/ColorSchemes";
 import { ColorTheme } from "@/types/ColorTheme";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/store/store";
-import { fetchBookedAppointments } from "@/store/appointmentBookingSlice";
+import { fetchBookedAppointments, reschedulingAppointment, setRescheduleAppointmentDetails } from "@/store/appointmentBookingSlice";
 import { ScrollView } from "react-native-gesture-handler";
 import { downloadInvoice } from "@/utils/downloadInvoice";
 import { MaterialIcons } from "@expo/vector-icons";
 import FilterToggle from "@/components/FilterToggle";
+import { canRescheduleAppoint } from "@/store/utilsSlice";
+import { useRouter } from "expo-router";
 
 
 LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
@@ -54,14 +57,12 @@ const Appointment = () => {
   const [activeFilter, setActiveFilter] = useState<"upcoming" | "past">("upcoming");
   const [refreshing, setRefreshing] = useState(false);
 
-
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
       if (userDetails?.entityBusinessID) {
         await dispatch(fetchBookedAppointments(userDetails.entityBusinessID));
       }
-
     } catch (error) {
       console.error("Refresh failed:", error);
     } finally {
@@ -84,7 +85,7 @@ const Appointment = () => {
     const keys = allBookedAppointments?.map(keyFor);
     const animations: Animated.CompositeAnimation[] = [];
 
-    keys.forEach((k: any, i: any) => {
+    keys?.forEach((k: any, i: any) => {
       if (!animatedValues[k]) animatedValues[k] = new Animated.Value(0);
       animations.push(
         Animated.timing(animatedValues[k], {
@@ -109,8 +110,23 @@ const Appointment = () => {
     const k = keyFor(item);
     const av = animatedValues[k] ?? new Animated.Value(1); // fallback
     const translateY = av.interpolate({ inputRange: [0, 1], outputRange: [18, 0] });
+    const { canReschedule } = useSelector((state: RootState) => state.utils)
     const opacity = av;
     const isExpanded = expandedId === k;
+    const dispatch = useDispatch<AppDispatch>();
+    const router = useRouter()
+
+    useEffect(() => {
+      dispatch(canRescheduleAppoint())
+    }, [])
+
+
+    const handleReschedule = async () => {
+      console.log("Item Data -- ", item);
+      await dispatch(setRescheduleAppointmentDetails(item));
+      router.push("/screens/RescheduleAppointment")
+    }
+
     return (
       <Animated.View
         style={[
@@ -126,10 +142,17 @@ const Appointment = () => {
         >
           <View style={styles.rowTop}>
             <View style={styles.dateBlock}>
-
               <Text style={styles.doctorName}>{item.doctorName ?? "—"}</Text>
+
               <Text style={styles.timeText}>{item.appointmentStartTime} • {item.appointmentEndTime}</Text>
-              <Text style={styles.dateText}>{formatDateDisplay(item.appointmentDate)}</Text>
+              <View style={{ flexDirection: 'row', gap: 10 }}>
+                <Text style={styles.dateText}>{formatDateDisplay(item.appointmentDate)}</Text>
+                {canReschedule && <TouchableOpacity activeOpacity={0.8} onPress={handleReschedule}>
+                  <Text style={styles.rescheduleBtnText}>
+                    Reschedule
+                  </Text>
+                </TouchableOpacity>}
+              </View>
             </View>
 
             <View>
@@ -223,7 +246,7 @@ const Appointment = () => {
           </View>
         ) : (
           filteredAppointments?.map((item, index) => (
-            <ItemCard key={`${item.appointmentID}_${item.entityID}`} item={item} index={index} />
+            <ItemCard key={`${item?.appointmentID}_${item.entityID}`} item={item} index={index} />
           ))
         )}
         {!filteredAppointments?.length && <View>
@@ -238,7 +261,6 @@ const Appointment = () => {
 
 export default Appointment;
 
-/** small Row component used inside expanded card */
 const Row: React.FC<{ label: string; value: string; colors: ColorTheme }> = ({ label, value, colors }) => (
   <View style={{ flexDirection: "row", justifyContent: "space-between", paddingVertical: 6 }}>
     <Text style={{ color: colors.onSurface, opacity: 0.85 }}>{label}</Text>
@@ -246,7 +268,6 @@ const Row: React.FC<{ label: string; value: string; colors: ColorTheme }> = ({ l
   </View>
 );
 
-/** ---------- styles ---------- */
 const makeStyles = (colors: ColorTheme) =>
   StyleSheet.create({
     mainPageContainer: {
@@ -292,7 +313,17 @@ const makeStyles = (colors: ColorTheme) =>
       color: "#FFFFFF",
       fontWeight: "600",
     },
-
+    rescheduleBtnText: {
+      color: colors.onPrimary,
+      paddingHorizontal: 7,
+      paddingVertical: 4,
+      backgroundColor: colors.primary,
+      borderRadius: 5,
+      marginRight: 5,
+      fontSize: 13,
+      fontWeight: '500',
+      marginBottom: 2
+    },
     subCardText: {
       fontSize: 14,
       fontWeight: "500",

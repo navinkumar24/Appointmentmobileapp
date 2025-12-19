@@ -5,12 +5,12 @@ import type { AxiosError } from "axios";
 import * as SecureStore from "expo-secure-store";
 
 
-
 export const fetchUserDetails = createAsyncThunk(
     'user/fetchUserDetails',
     async () => {
         const { key } = await getStoredValues();
         const udtl = await SecureStore.getItemAsync("udtl");
+        if (!udtl) return null;
         const decrypted = decrypt(udtl, key);
         let userDetails = null;
         try {
@@ -22,6 +22,17 @@ export const fetchUserDetails = createAsyncThunk(
         return userDetails;
     }
 )
+
+export const setUserDetails = createAsyncThunk(
+    "user/setUserDetails",
+    async (payload: any) => {
+        if (payload == null) {
+            await SecureStore.deleteItemAsync("udtl");
+            return null;
+        }
+        return payload;
+    }
+);
 
 type InitialState = {
     userDetails: any;
@@ -36,11 +47,7 @@ const initialState: InitialState = {
 export const userSlice = createSlice({
     name: 'user',
     initialState,
-    reducers: {
-        setUserDetails: (state, action) => {
-            state.userDetails = action.payload
-        }
-    },
+    reducers: {},
     extraReducers: (builder) => {
         builder
             .addCase(fetchUserDetails.pending, (state) => {
@@ -54,8 +61,19 @@ export const userSlice = createSlice({
                 state.loading = false;
                 state.userDetails = action.error
             })
+            .addCase(setUserDetails.pending, (state) => {
+                state.loading = true;
+            })
+            .addCase(setUserDetails.fulfilled, (state, action) => {
+                state.userDetails = action.payload;
+                state.loading = false;
+            })
+            .addCase(setUserDetails.rejected, (state, action) => {
+                state.loading = false;
+                state.userDetails = action.error
+            })
     }
 })
 
-export const {setUserDetails} = userSlice.actions
+// export const {  } = userSlice.actions
 export default userSlice.reducer

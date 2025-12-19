@@ -1,5 +1,5 @@
 // screens/SignupFormScreen.tsx
-import React, { useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import {
     StyleSheet,
     Text,
@@ -11,6 +11,7 @@ import {
     ScrollView,
     Alert,
     Modal,
+    ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
@@ -20,28 +21,60 @@ import useColorSchemes from "@/themes/ColorSchemes";
 import { useRouter } from "expo-router";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/store/store";
-import { registering, setMessage, setMobileNumber, setOtpAccessToken } from "@/store/authSlice";
+import { updatingUserProfile } from "@/store/authSlice";
+import { fetchUserDetails } from "@/store/userSlice";
+import { ColorTheme } from "@/types/ColorTheme";
 
 export default function SignupFormScreen() {
     const colors = useColorSchemes();
     const styles = makeStyles(colors);
     const router = useRouter();
-    const dispatch = useDispatch<AppDispatch>()
-    const [fullName, setFullName] = useState("");
-    const [dob, setDob] = useState<Date | null>();
-    const [showDatePicker, setShowDatePicker] = useState(false);
+    const dispatch = useDispatch<AppDispatch>();
+    // form fields
+    const [fullName, setFullName] = useState<string>("");
+    const [dob, setDob] = useState<Date | null>(null);
     const [tempDate, setTempDate] = useState<Date>(new Date());
+    const [showDatePicker, setShowDatePicker] = useState(false);
     const [gender, setGender] = useState<"Male" | "Female" | "Other">("Male");
-    const [address, setAddress] = useState("");
-    const { mobileNumber, otpAccessToken } = useSelector((state: RootState) => state.auth)
-    // bounds for DOB: from 100 years ago to today
-    const today = new Date();
+    const [address, setAddress] = useState<string>("");
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const { userDetails } = useSelector((s: RootState) => s.user);
+    // DOB bounds
+    const today = useMemo(() => new Date(), []);
     const maxDate = today;
-    const minDate = new Date(
-        today.getFullYear() - 100,
-        today.getMonth(),
-        today.getDate()
-    );
+    const minDate = new Date(today.getFullYear() - 100, today.getMonth(), today.getDate());
+    const parseDateSafe = (input: any): Date | null => {
+        if (!input && input !== 0) return null;
+        if (input instanceof Date) return isNaN(input.getTime()) ? null : input;
+        if (typeof input === "number") {
+            const d = new Date(input);
+            return isNaN(d.getTime()) ? null : d;
+        }
+        if (typeof input === "string") {
+            const d = new Date(input);
+            return isNaN(d.getTime()) ? null : d;
+        }
+        return null;
+    };
+
+    useEffect(() => {
+        dispatch(fetchUserDetails());
+    }, [dispatch]);
+
+    useEffect(() => {
+        if (!userDetails) return;
+        if (userDetails.entityBusinessName) setFullName(String(userDetails.entityBusinessName));
+        const parsedDOB = parseDateSafe((userDetails as any).DOB);
+        if (parsedDOB) {
+            setDob(parsedDOB);
+            setTempDate(parsedDOB);
+        }
+        if (userDetails.gender) {
+            const g = String(userDetails.gender);
+            if (g === "Male" || g === "Female" || g === "Other") setGender(g as any);
+        }
+        if (userDetails.address) setAddress(String(userDetails.address));
+    }, [userDetails]);
 
     const formatDate = (d?: Date | null) => {
         if (!d) return "";
@@ -50,7 +83,11 @@ export default function SignupFormScreen() {
             month: "short",
             year: "numeric",
         };
-        return d.toLocaleDateString(undefined, opts); // uses device locale
+        try {
+            return d.toLocaleDateString(undefined, opts);
+        } catch {
+            return d.toISOString().split("T")[0];
+        }
     };
 
     const calculateAge = (d?: Date | null) => {
@@ -61,94 +98,91 @@ export default function SignupFormScreen() {
     };
 
     const openDatePicker = () => {
-        // prefill tempDate with current DOB or a sensible default
-        setTempDate(
-            dob ?? new Date(today.getFullYear() - 25, today.getMonth(), today.getDate())
-        );
+        setTempDate(dob ?? new Date(today.getFullYear() - 25, today.getMonth(), today.getDate()));
         setShowDatePicker(true);
     };
 
-    const onChangeDateAndroid = (event: any, selected?: Date) => {
+    // Android onChange: (event, selectedDate)
+    const onChangeDateAndroid = (_event: any, selected?: Date | undefined) => {
         setShowDatePicker(false);
-        if (event?.action === "dismissed" || event?.type === "dismissed") return;
         if (selected) {
+            if (selected < minDate || selected > maxDate) {
+                Alert.alert("Invalid Date", `Please select a date between ${formatDate(minDate)} and ${formatDate(maxDate)}.`);
+                return;
+            }
             setDob(selected);
         }
     };
 
+    // iOS onChange while spinner open: update tempDate
     const onChangeDateIOS = (_event: any, selected?: Date | undefined) => {
-        // keep local tempDate in modal until user presses Done
-        if (selected) setTempDate(selected);
+        if (selected) {
+            setTempDate(selected);
+        }
     };
 
     const onPressDoneIOS = () => {
+        if (tempDate < minDate || tempDate > maxDate) {
+            Alert.alert("Invalid Date", `Please select a date between ${formatDate(minDate)} and ${formatDate(maxDate)}.`);
+            return;
+        }
         setDob(tempDate);
         setShowDatePicker(false);
     };
 
     const handleSignup = async () => {
-        if (!fullName || !dob || !address) {
+        // basic validation
+        if (!fullName?.trim() || !dob || !address?.trim()) {
             Alert.alert("Incomplete Profile", "Please fill all required fields.");
             return;
         }
-        const formData = {
-            fullName,
-            dob,
-            gender,
-            address,
-            mobileNumber,
-            otpAccessToken
-        };
-        
-        console.log("Form Data -- ", formData);
-        
-        try {
-            const result = await dispatch(registering(formData)).unwrap();
+        if (!userDetails?.entityBusinessID) {
+            return;
+        }
 
-            console.log("Result --- ", result)
-            // ✅ Success (result is guaranteed valid)
-            dispatch(setMessage(null));
-            dispatch(setOtpAccessToken(null));
-            dispatch(setMobileNumber(null));
+        // prepare payload: send dob as ISO string (or as your API expects)
+        const payload = {
+            fullName: fullName.trim(),
+            dob: dob.toISOString(),
+            gender,
+            address: address.trim(),
+            userID: userDetails?.entityBusinessID
+        };
+
+        setIsSubmitting(true);
+        try {
+            const result = await dispatch(updatingUserProfile(payload)).unwrap();
+            setFullName("");
+            setDob(null);
+            setGender("Male");
+            setAddress("");
+            dispatch(fetchUserDetails())
             router.replace("/(drawer)/(tabs)/home");
-        } catch (error: any) {
-            // ❌ Failure (rejectedWithValue lands here)
-            Alert.alert("Registration Failed", error);
+        } catch (err: any) {
+            Alert.alert("Registration Failed", typeof err === "string" ? err : (err?.message ?? "Unknown error"));
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
     return (
-        <LinearGradient
-            colors={[colors.primaryContainer, colors.secondaryContainer]}
-            style={{ flex: 1 }}
-        >
+        <LinearGradient colors={[colors.surface, colors.secondaryContainer]} style={{ flex: 1 }}>
             <SafeAreaView style={{ flex: 1 }}>
-                <KeyboardAvoidingView
-                    behavior={Platform.OS === "ios" ? "padding" : "height"}
-                    style={{ flex: 1 }}
-                >
+                <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1 }}>
                     <ScrollView
                         keyboardShouldPersistTaps="handled"
                         showsVerticalScrollIndicator={false}
                         contentContainerStyle={styles.scrollContainer}
                     >
-                        <View style={styles.header}>
-                            <Text style={[styles.title, { color: colors.onSurface }]}>
-                                Complete Your Profile
-                            </Text>
-                            <Text style={[styles.subtitle, { color: colors.primary }]}>
-                                Help us personalize your experience
-                            </Text>
-                        </View>
-
                         <View style={[styles.card, { backgroundColor: colors.surface }]}>
+                            {/* Header */}
+                            <View style={styles.header}>
+                                <Text style={[styles.subtitle, { color: colors.onSurfaceVariant }]}>Complete your profile to continue</Text>
+                            </View>
+
                             {/* Full Name */}
                             <View style={[styles.inputContainer, { backgroundColor: colors.surfaceVariant, borderColor: colors.outline }]}>
-                                <MaterialCommunityIcons
-                                    name="account-outline"
-                                    size={22}
-                                    color={colors.onSurfaceVariant}
-                                />
+                                <MaterialCommunityIcons name="account-outline" size={22} color={colors.onSurfaceVariant} />
                                 <TextInput
                                     style={[styles.input, { color: colors.onSurface }]}
                                     placeholder="Full Name *"
@@ -159,19 +193,14 @@ export default function SignupFormScreen() {
                                 />
                             </View>
 
-
-                            {/* DOB picker (replaces Age) */}
+                            {/* DOB picker */}
                             <Text style={[styles.sectionLabel, { color: colors.onSurfaceVariant }]}>Date of Birth</Text>
                             <TouchableOpacity
                                 activeOpacity={0.85}
                                 style={[styles.inputContainer, styles.dobContainer, { backgroundColor: colors.surfaceVariant, borderColor: colors.outline }]}
                                 onPress={openDatePicker}
                             >
-                                <MaterialCommunityIcons
-                                    name="calendar-month-outline"
-                                    size={22}
-                                    color={colors.onSurfaceVariant}
-                                />
+                                <MaterialCommunityIcons name="calendar-month-outline" size={22} color={colors.onSurfaceVariant} />
                                 <View style={{ flex: 1, marginLeft: 10 }}>
                                     <Text style={[styles.inputText, { color: dob ? colors.onSurface : colors.onSurfaceVariant }]}>
                                         {dob ? formatDate(dob) : "Select your date of birth *"}
@@ -183,7 +212,7 @@ export default function SignupFormScreen() {
                                 <MaterialCommunityIcons name="chevron-down" size={22} color={colors.onSurfaceVariant} />
                             </TouchableOpacity>
 
-                            {/* DateTimePicker handling */}
+                            {/* Android native picker */}
                             {showDatePicker && Platform.OS === "android" && (
                                 <DateTimePicker
                                     value={dob ?? new Date(today.getFullYear() - 25, today.getMonth(), today.getDate())}
@@ -195,7 +224,7 @@ export default function SignupFormScreen() {
                                 />
                             )}
 
-                            {/* iOS: modal with picker + Done */}
+                            {/* iOS modal */}
                             <Modal visible={showDatePicker && Platform.OS === "ios"} transparent animationType="slide">
                                 <View style={styles.iosModalBackdrop}>
                                     <View style={[styles.iosModalContent, { backgroundColor: colors.surface }]}>
@@ -203,7 +232,7 @@ export default function SignupFormScreen() {
                                             <TouchableOpacity onPress={() => setShowDatePicker(false)}>
                                                 <Text style={[styles.iosModalAction, { color: colors.primary }]}>Cancel</Text>
                                             </TouchableOpacity>
-                                            <TouchableOpacity onPress={onPressDoneIOS}>
+                                            <TouchableOpacity onPress={onPressDoneIOS} accessibilityLabel="Done">
                                                 <Text style={[styles.iosModalAction, { color: colors.primary, fontWeight: "700" }]}>Done</Text>
                                             </TouchableOpacity>
                                         </View>
@@ -223,12 +252,12 @@ export default function SignupFormScreen() {
                             {/* Gender */}
                             <Text style={[styles.sectionLabel, { color: colors.onSurfaceVariant }]}>Gender</Text>
                             <View style={styles.genderRow}>
-                                {["Male", "Female", "Other"].map((g) => {
+                                {(["Male", "Female", "Other"] as const).map((g) => {
                                     const active = gender === g;
                                     return (
                                         <TouchableOpacity
                                             key={g}
-                                            onPress={() => setGender(g as any)}
+                                            onPress={() => setGender(g)}
                                             activeOpacity={0.85}
                                             style={[
                                                 styles.genderBtn,
@@ -238,9 +267,7 @@ export default function SignupFormScreen() {
                                                 },
                                             ]}
                                         >
-                                            <Text style={[styles.genderText, { color: active ? colors.onPrimary : colors.onSurfaceVariant }]}>
-                                                {g}
-                                            </Text>
+                                            <Text style={[styles.genderText, { color: active ? colors.onPrimary : colors.onSurfaceVariant }]}>{g}</Text>
                                         </TouchableOpacity>
                                     );
                                 })}
@@ -248,11 +275,7 @@ export default function SignupFormScreen() {
 
                             {/* Address */}
                             <View style={[styles.inputContainer, styles.addressContainer, { backgroundColor: colors.surfaceVariant, borderColor: colors.outline }]}>
-                                <MaterialCommunityIcons
-                                    name="map-marker-outline"
-                                    size={22}
-                                    color={colors.onSurfaceVariant}
-                                />
+                                <MaterialCommunityIcons name="map-marker-outline" size={22} color={colors.onSurfaceVariant} />
                                 <TextInput
                                     style={[styles.input, styles.addressInput, { color: colors.onSurface }]}
                                     placeholder="Address *"
@@ -264,23 +287,18 @@ export default function SignupFormScreen() {
                             </View>
 
                             {/* Submit Button */}
-                            <TouchableOpacity
-                                activeOpacity={0.9}
-                                onPress={handleSignup}
-                                style={styles.buttonWrapper}
-                            >
-                                <LinearGradient
-                                    colors={[colors.primary, colors.secondaryContainer]}
-                                    style={styles.button}
-                                >
-                                    <Text style={[styles.buttonText, { color: colors.onPrimary }]}>Create Account</Text>
+                            <TouchableOpacity activeOpacity={0.9} onPress={handleSignup} style={styles.buttonWrapper} disabled={isSubmitting}>
+                                <LinearGradient colors={[colors.primary, colors.primary]} style={styles.button}>
+                                    {isSubmitting ? (
+                                        <ActivityIndicator size="small" color={colors.onPrimary} />
+                                    ) : (
+                                        <Text style={[styles.buttonText, { color: colors.onPrimary }]}>Update</Text>
+                                    )}
                                 </LinearGradient>
                             </TouchableOpacity>
                         </View>
 
-                        <Text style={[styles.footerText, { color: colors.onSurfaceVariant }]}>
-                            Your information is secure and confidential
-                        </Text>
+                        <Text style={[styles.footerText, { color: colors.onSurfaceVariant }]}>Your information is secure and confidential</Text>
                     </ScrollView>
                 </KeyboardAvoidingView>
             </SafeAreaView>
@@ -288,22 +306,16 @@ export default function SignupFormScreen() {
     );
 }
 
-/**
- * Theme-aware styles factory
- */
-const makeStyles = (colors: any) =>
+const makeStyles = (colors: ColorTheme) =>
     StyleSheet.create({
         scrollContainer: {
             flexGrow: 1,
             paddingHorizontal: 20,
             paddingBottom: 30,
-            justifyContent: "center",
         },
-
         header: {
             alignItems: "center",
             marginBottom: 20,
-            marginTop: 30,
         },
 
         title: {
@@ -325,6 +337,7 @@ const makeStyles = (colors: any) =>
             shadowOpacity: 0.12,
             shadowRadius: 12,
             shadowOffset: { width: 0, height: 5 },
+            marginTop: 32,
         },
 
         inputContainer: {
@@ -346,38 +359,31 @@ const makeStyles = (colors: any) =>
         inputText: {
             fontSize: 16,
         },
-
         dobContainer: {
             justifyContent: "space-between",
         },
-
         dobAgeText: {
             fontSize: 12,
             marginTop: 4,
         },
-
         addressContainer: {
             alignItems: "flex-start",
         },
-
         addressInput: {
             height: 80,
             textAlignVertical: "top",
         },
-
         sectionLabel: {
             fontSize: 14,
             fontWeight: "600",
             marginBottom: 8,
             marginTop: 6,
         },
-
         genderRow: {
             flexDirection: "row",
             justifyContent: "space-between",
             marginBottom: 16,
         },
-
         genderBtn: {
             flex: 1,
             paddingVertical: 12,
@@ -386,12 +392,10 @@ const makeStyles = (colors: any) =>
             alignItems: "center",
             borderWidth: 1,
         },
-
         genderText: {
             fontSize: 14,
             fontWeight: "600",
         },
-
         buttonWrapper: {
             marginTop: 10,
             borderRadius: 14,

@@ -29,14 +29,10 @@ export const loginOtp = async (
     } catch (err) {
         console.log("Error -- ", err)
         const error = err as AxiosError<any>;
-        throw new Error(
-            error.response?.data?.errorMessage ||
-            error.message ||
-            "OTP login failed"
-        );
+
+        showToast("error", "Error", error.message)
     }
 };
-
 
 export const register = async (formData: any) => {
     const { token, baseUrl } = await getStoredValues();
@@ -50,7 +46,6 @@ export const register = async (formData: any) => {
                     "gender": formData?.gender,
                     "address": formData?.address,
                     "DOB": dayjs(formData?.dob)?.format("DD-MM-YYYY"),
-                    "password": formData?.password
                 }
             },
             {
@@ -72,17 +67,18 @@ export const register = async (formData: any) => {
     }
 };
 
-export const changePassword = async (entityBusinessID: any, oldPassword: any, newPassword: any) => {
+export const updateUserProfile = async (formData: any) => {
     const { token, baseUrl } = await getStoredValues();
     try {
-        const response = await axios.post(
-            `${baseUrl}/opd/user/changePassword`,
+        const response = await axios.post(`${baseUrl}/opd/user/updateUser`,
             {
-                changePasswordRequest: {
-                    userID: entityBusinessID,
-                    oldPassword,
-                    newPassword,
-                },
+                "userUpdateRequest": {
+                    "entityBusinessID": formData?.userID,
+                    "entityBusinessName": formData?.fullName,
+                    "gender": formData?.gender,
+                    "address": formData?.address,
+                    "DOB": dayjs(formData?.dob)?.format("DD-MM-YYYY"),
+                }
             },
             {
                 headers: {
@@ -91,10 +87,12 @@ export const changePassword = async (entityBusinessID: any, oldPassword: any, ne
                 },
             }
         );
+        console.log("Res -- ", response)
         if (response?.data?.success) {
-            showToast("error", "Success", "Password Changed Successfully!")
+            showToast("success", "Success", "Profile Updated Successfully!")
+            return response?.data.responseList?.[0];
         }
-        return response?.data?.responseList;
+        return response?.data;
     } catch (err) {
         const error = err as AxiosError<any>;
         showToast("error", "Error", error?.response?.data?.errorMessage)

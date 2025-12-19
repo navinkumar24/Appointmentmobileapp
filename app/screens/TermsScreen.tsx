@@ -1,5 +1,5 @@
 // app/screens/TermsScreen.tsx
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -15,6 +15,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons, Entypo } from '@expo/vector-icons';
 import useColorSchemes from '@/themes/ColorSchemes';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch, RootState } from '@/store/store';
+import getenvValues from '@/utils/getenvValues';
+import { canRescheduleAppoint } from '@/store/utilsSlice';
 
 const SectionCard: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => {
   const colors = useColorSchemes();
@@ -56,6 +60,7 @@ const FAQItem: React.FC<{ question: string; answer: string }> = ({ question, ans
 const TermsScreen: React.FC = () => {
   const [refreshing, setRefreshing] = useState(false);
   const colors = useColorSchemes();
+  const { companyGmail, companyMobile } = getenvValues()
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -66,7 +71,7 @@ const TermsScreen: React.FC = () => {
   const faqs = [
     {
       question: 'When do these Terms take effect?',
-      answer: 'These Terms are effective as of January 1, 2025 (the "Effective Date").',
+      answer: 'These Terms are effective as of January 1, 2026 (the "Effective Date").',
     },
     {
       question: 'How will I know about changes?',
@@ -75,19 +80,19 @@ const TermsScreen: React.FC = () => {
     },
     {
       question: 'Who can I contact for legal questions?',
-      answer: 'For legal questions contact legal@yourdomain.com or visit the Privacy Policy page linked in the app.',
+      answer: `For legal questions contact ${companyGmail} or visit the Privacy Policy page linked in the app.`,
     },
   ];
 
   return (
     <LinearGradient colors={[colors.surface, colors.secondaryContainer]} style={styles.gradient}>
-      
+
       <ScrollView
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         contentContainerStyle={{ padding: 10 }}
         showsVerticalScrollIndicator={false}
       >
-        
+
 
         <SectionCard title="Acceptance">
           <Text style={[styles.bodyText, { color: colors.onSurface }]}>
@@ -127,13 +132,13 @@ const TermsScreen: React.FC = () => {
             If you have questions about these Terms, email{' '}
             <Text
               style={[styles.linkText, { color: colors.primary }]}
-              onPress={() => Linking.openURL('mailto:legal@yourdomain.com')}
+              onPress={() => Linking.openURL(`mailto:${companyGmail}`)}
             >
-              legal@yourdomain.com
+              {companyGmail}
             </Text>{' '}
             or call{' '}
-            <Text style={[styles.linkText, { color: colors.primary }]} onPress={() => Linking.openURL('tel:+15551234567')}>
-              +1 555 123 4567
+            <Text style={[styles.linkText, { color: colors.primary }]} onPress={() => Linking.openURL(`tel:${companyMobile}`)}>
+              {companyMobile}
             </Text>
             .
           </Text>
@@ -204,7 +209,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: 8,
   },
-  faqQuestion: { fontSize: 15, fontWeight: '600', flexWrap : 'wrap' },
+  faqQuestion: { fontSize: 15, fontWeight: '600', flexWrap: 'wrap' },
   faqBody: { paddingVertical: 8 },
   faqAnswer: { color: '#444', fontSize: 14 },
 

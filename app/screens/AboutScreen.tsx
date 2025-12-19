@@ -13,6 +13,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import useColorSchemes from '@/themes/ColorSchemes';
+import getenvValues from '@/utils/getenvValues';
 
 const SectionCard: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => {
   const colors = useColorSchemes();
@@ -29,8 +30,9 @@ const SectionCard: React.FC<{ title: string; children: React.ReactNode }> = ({ t
   );
 };
 
-const AboutScreen: React.FC<{ appVersion?: string }> = ({ appVersion = '1.0.0' }) => {
+const AboutScreen: React.FC<{ appVersion?: string }> = () => {
   const colors = useColorSchemes();
+   const { companyGmail, companyMobile, companyName } = getenvValues();
 
   return (
     <LinearGradient colors={[colors.surface, colors.secondaryContainer]} style={styles.gradient}>
@@ -62,22 +64,14 @@ const AboutScreen: React.FC<{ appVersion?: string }> = ({ appVersion = '1.0.0' }
             <View style={{ marginBottom: 8 }}>
               <Pressable
                 style={styles.linkRow}
-                onPress={() => Linking.openURL('https://yourdomain.com/privacy')}
+                onPress={() => Linking.openURL('https://www.gsneuroscience.com/privacypolicy')}
               >
                 <Text style={[styles.linkText, { color: colors.primary }]}>Privacy Policy</Text>
                 <MaterialIcons name="open-in-new" size={16} color={colors.onSurface} />
               </Pressable>
             </View>
 
-            <View>
-              <Pressable
-                style={styles.linkRow}
-                onPress={() => Linking.openURL('https://yourdomain.com/terms')}
-              >
-                <Text style={[styles.linkText, { color: colors.primary }]}>Terms & Conditions</Text>
-                <MaterialIcons name="open-in-new" size={16} color={colors.onSurface} />
-              </Pressable>
-            </View>
+            
           </SectionCard>
 
           <SectionCard title="Contact">
@@ -88,7 +82,7 @@ const AboutScreen: React.FC<{ appVersion?: string }> = ({ appVersion = '1.0.0' }
             <View style={styles.row}>
               <Pressable
                 style={[styles.contactButton, { backgroundColor: colors.primary, shadowColor: colors.onSurface }]}
-                onPress={() => Linking.openURL('mailto:support@yourdomain.com')}
+                onPress={() => Linking.openURL(`mailto:${companyGmail}`)}
               >
                 <MaterialIcons name="email" size={18} color={colors.onPrimary} />
                 <Text style={[styles.buttonText, { color: colors.onPrimary }]}> Email</Text>
@@ -96,7 +90,7 @@ const AboutScreen: React.FC<{ appVersion?: string }> = ({ appVersion = '1.0.0' }
 
               <Pressable
                 style={[styles.contactButton, { marginLeft: 12, backgroundColor: colors.primary, shadowColor: colors.onSurface }]}
-                onPress={() => Linking.openURL('tel:+15551234567')}
+                onPress={() => Linking.openURL(`tel:${companyMobile}`)}
               >
                 <MaterialIcons name="call" size={18} color={colors.onPrimary} />
                 <Text style={[styles.buttonText, { color: colors.onPrimary }]}> Call</Text>
@@ -105,7 +99,7 @@ const AboutScreen: React.FC<{ appVersion?: string }> = ({ appVersion = '1.0.0' }
           </SectionCard>
 
           <View style={{ alignItems: 'center', marginTop: 18 }}>
-            <Text style={[styles.bodyText, { color: colors.outline }]}>© {new Date().getFullYear()} Your Company</Text>
+            <Text style={[styles.bodyText, { color: colors.outline }]}>© {new Date().getFullYear()} {companyName}</Text>
           </View>
         </ScrollView>
       </SafeAreaView>

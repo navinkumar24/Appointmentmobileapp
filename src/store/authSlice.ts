@@ -1,6 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import type { AxiosError } from "axios";
-import { changePassword, loginOtp, register } from '../api/auth'
+import { updateUserProfile, loginOtp, register } from '../api/auth'
 import { encrypt } from "@/utils/encryption";
 import getStoredValues from "@/utils/getStoredValues";
 import * as SecureStore from 'expo-secure-store'
@@ -18,7 +18,6 @@ export const logginViaOTP = createAsyncThunk(
                 const encrypted = encrypt(JSON.stringify(user), key);
                 await SecureStore.setItemAsync("udtl", encrypted);
             }
-            // console.log("Response from the redux -- ", response)
             return response;
         } catch (err: any) {
             return rejectWithValue(err.message || "OTP login failed");
@@ -49,20 +48,30 @@ export const registering = createAsyncThunk(
         }
     }
 );
-
-export const changingPassword = createAsyncThunk(
-    'auth/changingPassword',
-    async ({ entityBusinessID, oldPassword, newPassword }: any, { rejectWithValue }) => {
+export const updatingUserProfile = createAsyncThunk(
+    "auth/updatingUserProfile",
+    async (formData: any, { rejectWithValue }) => {
         try {
-            const response = await changePassword(entityBusinessID, oldPassword, newPassword);
-            response
-            return response
+            const { key } = await getStoredValues();
+            let response = await updateUserProfile(formData);
+            if (!response || Object.keys(response).length === 0) {
+                return rejectWithValue("Invalid server response");
+            }
+            // 🔐 Secure storage
+            const encrypted = encrypt(JSON.stringify(response), key);
+            await SecureStore.setItemAsync("udtl", JSON.stringify(encrypted));
+            return response;
         } catch (err) {
-            const error = err as AxiosError<any>
-            return rejectWithValue(error.message || "Fetch failed");
+            const error = err as AxiosError<any>;
+            return rejectWithValue(
+                error.response?.data?.message ||
+                error.message ||
+                "Registration failed"
+            );
         }
     }
 );
+
 
 
 type InitialState = {
@@ -94,8 +103,6 @@ export const authSlice = createSlice({
         })
     },
     extraReducers(builder) {
-
-
     },
 })
 

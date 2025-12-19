@@ -54,7 +54,6 @@ export default function Home() {
   const styles = dynamicStyles(colors);
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
-  const { file_service_base_url } = getenvValues();
   const { allSpecializations } = useSelector((s: RootState) => s.home);
   const [svgCache, setSvgCache] = useState<Record<number, string>>({});
   const [loadingIcons, setLoadingIcons] = useState<Record<number, boolean>>({});

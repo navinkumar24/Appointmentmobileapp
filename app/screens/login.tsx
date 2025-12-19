@@ -23,6 +23,7 @@ import { AppDispatch, RootState } from "@/store/store";
 import { setMessage, setMobileNumber } from "@/store/authSlice";
 import showToast from "@/utils/showToast";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { fetchUserDetails } from "@/store/userSlice";
 
 export default function Login() {
   const colors = useColorSchemes();
@@ -30,18 +31,23 @@ export default function Login() {
   const dispatch = useDispatch<AppDispatch>();
   const { mobileNumber } = useSelector((state: RootState) => state.auth)
   const { userDetails } = useSelector((state: RootState) => state.user)
-  const { widgetId, tokenAuth } = getenvValues();
+  const { widgetId, tokenAuth, companyName } = getenvValues();
   const [loading, setLoading] = useState<boolean>();
 
   useMemo(() => {
     OTPWidget.initializeWidget(widgetId, tokenAuth);
   }, [tokenAuth, widgetId])
 
+
   useEffect(() => {
-    if (userDetails && Object?.keys(userDetails)?.length) {
-      router.replace("/(drawer)/(tabs)/home")
-    }
-  }, [])
+    (async () => {
+      const response = await dispatch(fetchUserDetails()).unwrap()
+      console.log("User Details -- ", response)
+      if (userDetails?.entityBusinessID) {
+        router.replace("/(drawer)/(tabs)/home")
+      }
+    })()
+  }, [userDetails?.entityBusinessID])
 
   const handleSendOtp = async () => {
     const data = {
@@ -102,7 +108,7 @@ export default function Login() {
             </View>
             {/* ---------- HEADER ---------- */}
             <View style={styles.header}>
-              <Text style={styles.title}>GS Neuro Science</Text>
+              <Text style={styles.title}>{companyName}</Text>
               <Text style={[styles.subtitle, { color: colors.primary }]}>
                 Your health, our priority
               </Text>
@@ -137,9 +143,9 @@ export default function Login() {
                 activeOpacity={0.85}
               >
                 {loading ? <ActivityIndicator size={"small"} color={colors.onPrimary} />
-              :   <Text style={styles.loginButtonText}>Continue</Text>
-              }
-                
+                  : <Text style={styles.loginButtonText}>Continue</Text>
+                }
+
               </TouchableOpacity>
             </View>
 
@@ -147,7 +153,7 @@ export default function Login() {
             <View style={styles.footer}>
               <Text style={styles.footerText}>Powered by</Text>
               <Text style={[styles.footerBrand, { color: colors.primary }]}>
-                iCare Infosystem Pvt. Ltd
+                iCare Infosystems Pvt. Ltd
               </Text>
             </View>
           </ScrollView>
