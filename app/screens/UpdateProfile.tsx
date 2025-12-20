@@ -130,7 +130,7 @@ export default function SignupFormScreen() {
         setShowDatePicker(false);
     };
 
-    const handleSignup = async () => {
+    const handleUpdate = async () => {
         // basic validation
         if (!fullName?.trim() || !dob || !address?.trim()) {
             Alert.alert("Incomplete Profile", "Please fill all required fields.");
@@ -156,7 +156,7 @@ export default function SignupFormScreen() {
             setDob(null);
             setGender("Male");
             setAddress("");
-            dispatch(fetchUserDetails())
+            await dispatch(fetchUserDetails())
             router.replace("/(drawer)/(tabs)/home");
         } catch (err: any) {
             Alert.alert("Registration Failed", typeof err === "string" ? err : (err?.message ?? "Unknown error"));
@@ -287,7 +287,7 @@ export default function SignupFormScreen() {
                             </View>
 
                             {/* Submit Button */}
-                            <TouchableOpacity activeOpacity={0.9} onPress={handleSignup} style={styles.buttonWrapper} disabled={isSubmitting}>
+                            <TouchableOpacity activeOpacity={0.9} onPress={handleUpdate} style={styles.buttonWrapper} disabled={isSubmitting}>
                                 <LinearGradient colors={[colors.primary, colors.primary]} style={styles.button}>
                                     {isSubmitting ? (
                                         <ActivityIndicator size="small" color={colors.onPrimary} />

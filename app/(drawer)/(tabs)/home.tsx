@@ -22,6 +22,7 @@ import { fetchAllSpecializations } from '@/store/homeSlice';
 import { setDoctorSpecialitiesPageTitle, setSelectedSpecialist } from '@/store/utilsSlice';
 import getenvValues from '@/utils/getenvValues';
 import { ColorTheme } from '@/types/ColorTheme';
+import GradientText from '@/components/GradientText';
 
 const { width } = Dimensions.get('window');
 const CARD_GAP = 14;
@@ -161,8 +162,17 @@ export default function Home() {
             </View>
 
             <View style={{ flex: 1, marginLeft: 8 }}>
-              <Text style={styles.serviceTitle}>{title}</Text>
-              {subtitle ? <Text style={styles.serviceSubtitle}>{subtitle}</Text> : null}
+              <GradientText
+                text={title}
+                style={styles.serviceTitle}
+                colors={[colors.tertiary, colors.primary]}
+              />
+              {subtitle &&
+                <GradientText
+                  text={subtitle}
+                  style={styles.serviceSubtitle}
+                  colors={[colors.primary, colors.primaryContainer]}
+                />}
             </View>
           </LinearGradient>
         </Animated.View>
@@ -175,7 +185,7 @@ export default function Home() {
     const cachedXml = svgCache[id];
     const loading = loadingIcons[id];
 
-    const onPress = async() => {
+    const onPress = async () => {
       await dispatch(setDoctorSpecialitiesPageTitle({ specializationName: item?.entityBusinessName, specializationID: item?.entityBusinessID }));
       await dispatch(setSelectedSpecialist(item));
       router?.push('/screens/ShowDoctors');

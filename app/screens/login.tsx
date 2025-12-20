@@ -41,8 +41,7 @@ export default function Login() {
 
   useEffect(() => {
     (async () => {
-      const response = await dispatch(fetchUserDetails()).unwrap()
-      console.log("User Details -- ", response)
+      await dispatch(fetchUserDetails())
       if (userDetails?.entityBusinessID) {
         router.replace("/(drawer)/(tabs)/home")
       }

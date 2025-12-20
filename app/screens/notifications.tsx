@@ -222,83 +222,10 @@ export default function Notifications() {
     );
   };
 
-  const renderEmpty = () => (
-    <View style={styles.emptyContainer}>
-      <MaterialCommunityIcons name="bell-off-outline" size={48} color={colors.onSurfaceVariant} />
-      <Text style={[styles.emptyTitle, { color: colors.onSurface }]}>No notifications</Text>
-      <Text style={[styles.emptySubtitle, { color: colors.onSurfaceVariant }]}>
-        You're all caught up.
-      </Text>
-    </View>
-  );
+
 
   return (
     <View style={[styles.root, { backgroundColor: colors.surface }]}>
-      {/* Header */}
-      {/* <View style={[styles.header, { borderBottomColor: colors.surfaceVariant }]}>
-        {!selectionMode ? (
-          <>
-            <Text style={[styles.headerTitle, { color: colors.onSurface }]}>Notifications</Text>
-            <View style={styles.headerActions}>
-              <TouchableOpacity
-                onPress={() => {
-                  // mark all read
-                  setNotifications((prev) => prev.map((n) => ({ ...n, unread: false })));
-                }}
-                style={styles.headerIcon}
-              >
-                <MaterialCommunityIcons name="check-all" size={20} color={colors.onSurfaceVariant} />
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={() => {
-                  // enter selection mode with none selected
-                  setSelectionMode(true);
-                  setSelectedIds([]);
-                }}
-                style={styles.headerIcon}
-              >
-                <MaterialCommunityIcons name="trash-can-outline" size={20} color={colors.onSurfaceVariant} />
-              </TouchableOpacity>
-            </View>
-          </>
-        ) : (
-          <>
-            <View style={styles.selectionLeft}>
-              <TouchableOpacity
-                onPress={() => {
-                  setSelectionMode(false);
-                  setSelectedIds([]);
-                }}
-                style={{ paddingRight: 12 }}
-              >
-                <MaterialCommunityIcons name="close" size={22} color={colors.onSurface} />
-              </TouchableOpacity>
-              <Text style={[styles.selectionCount, { color: colors.onSurface }]}>
-                {selectedIds.length} selected
-              </Text>
-            </View>
-
-            <View style={styles.headerActions}>
-              <TouchableOpacity onPress={handleSelectAll} style={styles.headerIcon}>
-                <MaterialCommunityIcons name="select-all" size={20} color={colors.onSurfaceVariant} />
-              </TouchableOpacity>
-
-              <TouchableOpacity onPress={handleDeleteSelected} style={styles.headerIcon}>
-                <MaterialCommunityIcons name="delete" size={20} color={selectedIds.length ? colors.error : colors.onSurfaceVariant} />
-              </TouchableOpacity>
-            </View>
-          </>
-        )}
-      </View> */}
-
-      {/* <FlatList
-        data={notifications}
-        keyExtractor={(item) => item.id}
-        renderItem={renderNotificationItem}
-        ItemSeparatorComponent={() => <View style={[styles.separator, { backgroundColor: colors.surfaceVariant }]} />}
-        contentContainerStyle={notifications.length === 0 ? styles.flatEmpty : styles.listContent}
-        ListEmptyComponent={renderEmpty}
-      /> */}
       <Text style={{ alignSelf: "center", marginTop: 50, fontSize : 15, fontWeight : '600' }}>Not Available</Text>
     </View>
   );

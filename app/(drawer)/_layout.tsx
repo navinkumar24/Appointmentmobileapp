@@ -198,6 +198,7 @@ const dynamicStyles = (colors: ColorTheme) =>
         welcomeText: {
             fontSize: 18,
             fontWeight: "600",
+            textAlign : 'center'
         },
         menuContainer: {
             flex: 1,

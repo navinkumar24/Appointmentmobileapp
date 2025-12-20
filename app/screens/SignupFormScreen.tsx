@@ -9,7 +9,6 @@ import {
     KeyboardAvoidingView,
     Platform,
     ScrollView,
-    Alert,
     Modal,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -21,6 +20,8 @@ import { useRouter } from "expo-router";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/store/store";
 import { registering, setMessage, setMobileNumber, setOtpAccessToken } from "@/store/authSlice";
+import { fetchUserDetails } from "@/store/userSlice";
+import showToast from "@/utils/showToast";
 
 export default function SignupFormScreen() {
     const colors = useColorSchemes();
@@ -88,7 +89,7 @@ export default function SignupFormScreen() {
 
     const handleSignup = async () => {
         if (!fullName || !dob || !address) {
-            Alert.alert("Incomplete Profile", "Please fill all required fields.");
+            showToast("error", "Incomplete Profile", "Please fill all required fields.");
             return;
         }
         const formData = {
@@ -110,10 +111,11 @@ export default function SignupFormScreen() {
             dispatch(setMessage(null));
             dispatch(setOtpAccessToken(null));
             dispatch(setMobileNumber(null));
+            await dispatch(fetchUserDetails())
             router.replace("/(drawer)/(tabs)/home");
         } catch (error: any) {
             // ❌ Failure (rejectedWithValue lands here)
-            Alert.alert("Registration Failed", error);
+            console.log("Registration Failed", error);
         }
     };
 
@@ -133,10 +135,10 @@ export default function SignupFormScreen() {
                         contentContainerStyle={styles.scrollContainer}
                     >
                         <View style={styles.header}>
-                            <Text style={[styles.title, { color: colors.onSurface }]}>
+                            <Text style={[styles.title, { color: colors.onPrimary }]}>
                                 Complete Your Profile
                             </Text>
-                            <Text style={[styles.subtitle, { color: colors.primary }]}>
+                            <Text style={[styles.subtitle, { color: colors.onPrimary }]}>
                                 Help us personalize your experience
                             </Text>
                         </View>
@@ -270,7 +272,7 @@ export default function SignupFormScreen() {
                                 style={styles.buttonWrapper}
                             >
                                 <LinearGradient
-                                    colors={[colors.primary, colors.secondaryContainer]}
+                                    colors={[colors.primary, colors.primary]}
                                     style={styles.button}
                                 >
                                     <Text style={[styles.buttonText, { color: colors.onPrimary }]}>Create Account</Text>

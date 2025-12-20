@@ -17,32 +17,38 @@ import { Asset } from "expo-asset";
 import { LinearGradient } from "expo-linear-gradient";
 import getenvValues from "@/utils/getenvValues";
 
-SplashScreen.preventAutoHideAsync().catch(() => { });
+SplashScreen.preventAutoHideAsync().catch(() => {});
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
+
 const H_PADDING = 28 * 2;
 const PROGRESS_CONTAINER_WIDTH = SCREEN_WIDTH - H_PADDING;
 const LOGO_SIZE = Math.min(SCREEN_WIDTH, SCREEN_HEIGHT) * 0.34;
 
 const TIMINGS = {
-  introDuration: 520,
-  settleDuration: 260,
-  subtitleDelay: 160,
-  progressTotal: 2000,
-  floatDuration: 1600,
+  revealDelay: 120,          // brief native splash visibility (ms)
+  introDuration: 600,        // logo fade + pop (ms)
+  settleDuration: 300,       // logo settle (ms)
+  subtitleFadeDuration: 420, // subtitle fade (ms)
+  floatDuration: 900,        // one float leg (ms) — up or down
+  floatIterations: 4,        // number of float iterations
+  finalHold: 60,            // small visual settle before navigation (ms)
 };
+
+const TOTAL_PROGRESS_DURATION_MS = 1000; // <-- fixed at 1 second
 
 export default function Index() {
   const router = useRouter();
+  const { companyName } = getenvValues();
 
-  // animation values
+  // animated values
   const logoScale = useRef(new Animated.Value(0.78)).current;
   const logoOpacity = useRef(new Animated.Value(0)).current;
   const logoRotate = useRef(new Animated.Value(0)).current;
   const floatAnim = useRef(new Animated.Value(0)).current;
   const subtitleOpacity = useRef(new Animated.Value(0)).current;
-  const progress = useRef(new Animated.Value(0)).current;
-  const { companyName } = getenvValues()
+  const progress = useRef(new Animated.Value(0)).current; // 0..1
+
   const [assetsReady, setAssetsReady] = useState(false);
 
   // preload logo
@@ -62,130 +68,121 @@ export default function Index() {
     };
   }, []);
 
-  // orchestrate animations
   useEffect(() => {
     if (!assetsReady) return;
 
-    // 1) intro: fade + spring pop + small rotate
-    const intro = Animated.parallel([
-      Animated.timing(logoOpacity, {
+    let mounted = true;
+    let progressAnim: Animated.CompositeAnimation | null = null;
+    let fullSequence: Animated.CompositeAnimation | null = null;
+
+    (async () => {
+      // hide native splash quickly so React view becomes visible
+      await new Promise((r) => setTimeout(r, TIMINGS.revealDelay));
+      await SplashScreen.hideAsync().catch(() => {});
+
+      if (!mounted) return;
+
+      // start smooth linear progress (single animation for 0 -> 1)
+      progressAnim = Animated.timing(progress, {
         toValue: 1,
-        duration: 300,
-        easing: Easing.out(Easing.cubic),
-        useNativeDriver: true,
-      }),
-      Animated.spring(logoScale, {
-        toValue: 1.06,
-        friction: 6,
-        tension: 70,
-        useNativeDriver: true,
-      }),
-      Animated.timing(logoRotate, {
+        duration: TOTAL_PROGRESS_DURATION_MS,
+        easing: Easing.linear,
+        useNativeDriver: false, // width interpolation cannot use native driver
+      });
+      progressAnim.start();
+
+      // logo intro (opacity + spring) and slight rotate
+      const intro = Animated.parallel([
+        Animated.timing(logoOpacity, {
+          toValue: 1,
+          duration: TIMINGS.introDuration,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: true,
+        }),
+        Animated.spring(logoScale, {
+          toValue: 1.06,
+          friction: 6,
+          tension: 70,
+          useNativeDriver: true,
+        }),
+        Animated.timing(logoRotate, {
+          toValue: 1,
+          duration: TIMINGS.introDuration,
+          easing: Easing.out(Easing.quad),
+          useNativeDriver: true,
+        }),
+      ]);
+
+      // settle back to neutral scale
+      const settle = Animated.timing(logoScale, {
         toValue: 1,
-        duration: TIMINGS.introDuration,
+        duration: TIMINGS.settleDuration,
         easing: Easing.out(Easing.quad),
         useNativeDriver: true,
-      }),
-      Animated.timing(progress, {
-        toValue: 0.45,
-        duration: 520,
-        easing: Easing.inOut(Easing.ease),
-        useNativeDriver: false,
-      }),
-    ]);
+      });
 
-    // 2) settle back to neutral scale
-    const settle = Animated.timing(logoScale, {
-      toValue: 1,
-      duration: TIMINGS.settleDuration,
-      easing: Easing.out(Easing.quad),
-      useNativeDriver: true,
-    });
-
-    // 3) subtitle fade + ramp progress most of the way
-    const subtitleAndProgress = Animated.parallel([
-      Animated.timing(subtitleOpacity, {
+      // subtitle fade
+      const subtitleFade = Animated.timing(subtitleOpacity, {
         toValue: 1,
-        duration: 420,
-        delay: TIMINGS.subtitleDelay,
+        duration: TIMINGS.subtitleFadeDuration,
         easing: Easing.out(Easing.ease),
         useNativeDriver: true,
-      }),
-      Animated.timing(progress, {
-        toValue: 0.86,
-        duration: 900,
-        easing: Easing.inOut(Easing.ease),
-        useNativeDriver: false,
-      }),
-    ]);
+      });
 
-    // 4) small float loop (gentle) — run twice
-    const floatLoop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(floatAnim, {
-          toValue: -6,
-          duration: TIMINGS.floatDuration,
-          easing: Easing.inOut(Easing.sin),
-          useNativeDriver: true,
-        }),
-        Animated.timing(floatAnim, {
-          toValue: 0,
-          duration: TIMINGS.floatDuration,
-          easing: Easing.inOut(Easing.sin),
-          useNativeDriver: true,
-        }),
-      ]),
-      { iterations: 2 }
-    );
+      // float loop (gentle)
+      const floatLoop = Animated.loop(
+        Animated.sequence([
+          Animated.timing(floatAnim, {
+            toValue: -6,
+            duration: TIMINGS.floatDuration,
+            easing: Easing.inOut(Easing.sin),
+            useNativeDriver: true,
+          }),
+          Animated.timing(floatAnim, {
+            toValue: 0,
+            duration: TIMINGS.floatDuration,
+            easing: Easing.inOut(Easing.sin),
+            useNativeDriver: true,
+          }),
+        ]),
+        { iterations: TIMINGS.floatIterations }
+      );
 
-    // 5) final progress to 100%
-    const finalProgress = Animated.timing(progress, {
-      toValue: 1,
-      duration: 420,
-      easing: Easing.inOut(Easing.ease),
-      useNativeDriver: false,
-    });
+      fullSequence = Animated.sequence([intro, settle, subtitleFade, floatLoop]);
 
-    const fullSequence = Animated.sequence([intro, settle, subtitleAndProgress, floatLoop, finalProgress]);
-
-    let finished = false;
-    fullSequence.start(async () => {
-      if (finished) return;
-      finished = true;
-      // small visual settle time
-      await new Promise((r) => setTimeout(r, 160));
-      await SplashScreen.hideAsync().catch(() => { });
-      router.replace("/screens/GetStarted");
-    });
+      fullSequence.start(async () => {
+        if (!mounted) return;
+        // small settle before routing to make transition feel smooth
+        await new Promise((r) => setTimeout(r, TIMINGS.finalHold));
+        if (!mounted) return;
+        router.replace("/screens/GetStarted");
+      });
+    })();
 
     return () => {
-      finished = true;
-      fullSequence.stop();
+      mounted = false;
+      try {
+        progressAnim?.stop();
+      } catch {}
+      try {
+        fullSequence?.stop();
+      } catch {}
     };
-  }, [
-    assetsReady,
-    logoOpacity,
-    logoScale,
-    logoRotate,
-    floatAnim,
-    subtitleOpacity,
-    progress,
-    router,
-  ]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [assetsReady, router]);
 
-  // interpolation for rotation
+  // rotation interpolation
   const rotateInterpolate = logoRotate.interpolate({
     inputRange: [0, 1],
     outputRange: ["-4deg", "0deg"],
   });
 
-  // compute numeric width for progress bar (animating numeric values, not strings)
+  // progress bar width interpolation (smooth)
   const innerWidth = progress.interpolate({
     inputRange: [0, 1],
     outputRange: [6, PROGRESS_CONTAINER_WIDTH - 6],
   });
 
-  // render
   return (
     <LinearGradient
       colors={["#F7FBFF", "#E6F4FE"]}
@@ -293,7 +290,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     backgroundColor: "#0A7AFF",
     alignSelf: "flex-start",
-    width: 6, 
+    width: 6,
   },
   footer: {
     position: "absolute",

@@ -32,7 +32,6 @@ export default function SignupOtpScreen() {
     const { message, otpAccessToken, mobileNumber, isAuthenticated } = useSelector((state: RootState) => state.auth)
     const dispatch = useDispatch<AppDispatch>();
     const [loading, setLoading] = useState<boolean>();
-
     const [otp, setOtp] = useState<string[]>(
         Array.from({ length: OTP_LENGTH }).map(() => "")
     );

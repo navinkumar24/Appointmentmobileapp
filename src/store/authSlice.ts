@@ -4,6 +4,7 @@ import { updateUserProfile, loginOtp, register } from '../api/auth'
 import { encrypt } from "@/utils/encryption";
 import getStoredValues from "@/utils/getStoredValues";
 import * as SecureStore from 'expo-secure-store'
+import showToast from "@/utils/showToast";
 
 
 export const logginViaOTP = createAsyncThunk(
@@ -20,7 +21,9 @@ export const logginViaOTP = createAsyncThunk(
             }
             return response;
         } catch (err: any) {
-            return rejectWithValue(err.message || "OTP login failed");
+            console.log("Error -- ", err)
+            const error = err as AxiosError<any>;
+            showToast("error", "Error", error.message || "OTP login failed")
         }
     }
 );
@@ -36,15 +39,14 @@ export const registering = createAsyncThunk(
             }
             // 🔐 Secure storage
             const encrypted = encrypt(JSON.stringify(response), key);
-            await SecureStore.setItemAsync("udtl", JSON.stringify(encrypted));
+            await SecureStore.setItemAsync("udtl", encrypted);
             return response;
         } catch (err) {
             const error = err as AxiosError<any>;
-            return rejectWithValue(
-                error.response?.data?.message ||
+            console.log("Error -- ", error)
+            showToast("error", "Error", error.response?.data?.message ||
                 error.message ||
-                "Registration failed"
-            );
+                "Registration failed")
         }
     }
 );
@@ -59,15 +61,14 @@ export const updatingUserProfile = createAsyncThunk(
             }
             // 🔐 Secure storage
             const encrypted = encrypt(JSON.stringify(response), key);
-            await SecureStore.setItemAsync("udtl", JSON.stringify(encrypted));
+            await SecureStore.setItemAsync("udtl", encrypted);
             return response;
         } catch (err) {
             const error = err as AxiosError<any>;
-            return rejectWithValue(
-                error.response?.data?.message ||
+            console.log("Error -- ", error)
+            showToast("error", "Error", error.response?.data?.message ||
                 error.message ||
-                "Registration failed"
-            );
+                "Updation failed")
         }
     }
 );

@@ -17,7 +17,6 @@ function ThemedLayoutWrapper() {
       <Stack.Screen name="screens/SignupMobileScreen" options={{ headerShown: false }} />
       <Stack.Screen name="screens/SignupOtpScreen" options={{ headerShown: false }} />
       <Stack.Screen name="screens/SignupFormScreen" options={{ headerShown: false }} />
-      <Stack.Screen name="screens/ForgotPassword" options={{ headerShown: false }} />
       <Stack.Screen name="screens/GetStarted" options={{ headerShown: false }} />
       
       <Stack.Screen

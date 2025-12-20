@@ -44,6 +44,13 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "4b8fdcd1-f2ae-4f15-9c86-311625ac5aec"
+      }
+    },
+    "owner": "icareinfosystem"
   }
 }

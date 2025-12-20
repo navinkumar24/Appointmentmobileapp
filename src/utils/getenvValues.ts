@@ -1,6 +1,6 @@
 
 const getenvValues = () => {
-    const baseUrl = "http://192.168.1.170:8081";
+    const baseUrl = "https://gsnappointment.anikrafoundation.com";
     const key = "icare_application_secret_key_123";
     const widgetId = "356c6d6a5045373336363339";
     const tokenAuth = "477387TQM11Jolq69130c59P1";
