@@ -1,10 +1,10 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import type { AxiosError } from "axios";
-import { updateUserProfile, loginOtp, register } from '../api/auth'
+import { updateUserProfile, loginOtp, register, logout } from '../api/auth'
 import { encrypt } from "@/utils/encryption";
 import getStoredValues from "@/utils/getStoredValues";
 import * as SecureStore from 'expo-secure-store'
-import showToast from "@/utils/showToast";
+import { useRouter } from "expo-router";
+
 
 
 export const logginViaOTP = createAsyncThunk(
@@ -14,16 +14,30 @@ export const logginViaOTP = createAsyncThunk(
         try {
             const { key } = await getStoredValues();
             const response = await loginOtp(mobile, accessToken);
-            if (response?.statusCode == 200) {
-                const user = response.responseList?.[0];
-                const encrypted = encrypt(JSON.stringify(user), key);
-                await SecureStore.setItemAsync("udtl", encrypted);
-            }
+            const user = response?.responseList?.[0]
+            const encrypted = encrypt(JSON.stringify(user), key);
+            await SecureStore.setItemAsync("udtl", encrypted);
+            await SecureStore.setItemAsync("tkn", encrypt(user?.token, key));
+            await SecureStore.setItemAsync("refTkn", encrypt(user?.refreshToken, key));
             return response;
         } catch (err: any) {
-            console.log("Error -- ", err)
-            const error = err as AxiosError<any>;
-            showToast("error", "Error", error.message || "OTP login failed")
+            return rejectWithValue(err?.message || "failed to login");
+        }
+    }
+);
+export const loggingOut = createAsyncThunk(
+    "auth/logginViaOTP",
+    async (_, { rejectWithValue }) => {
+        try {
+            const router = useRouter()
+            const user = await logout();
+            await SecureStore.deleteItemAsync("udtl");
+            await SecureStore.deleteItemAsync("tkn");
+            await SecureStore.deleteItemAsync("refTkn");
+            router.replace("/screens/login")
+            return user;
+        } catch (err: any) {
+            return rejectWithValue(err?.message || "failed to login");
         }
     }
 );
@@ -33,20 +47,17 @@ export const registering = createAsyncThunk(
     async (formData: any, { rejectWithValue }) => {
         try {
             const { key } = await getStoredValues();
-            let response = await register(formData);
-            if (!response || Object.keys(response).length === 0) {
+            let user = await register(formData);
+            if (!user || Object.keys(user).length === 0) {
                 return rejectWithValue("Invalid server response");
             }
-            // 🔐 Secure storage
-            const encrypted = encrypt(JSON.stringify(response), key);
+            const encrypted = encrypt(JSON.stringify(user), key);
             await SecureStore.setItemAsync("udtl", encrypted);
-            return response;
-        } catch (err) {
-            const error = err as AxiosError<any>;
-            console.log("Error -- ", error)
-            showToast("error", "Error", error.response?.data?.message ||
-                error.message ||
-                "Registration failed")
+            await SecureStore.setItemAsync("tkn", encrypt(user?.token, key));
+            await SecureStore.setItemAsync("refTkn", encrypt(user?.refreshToken, key));
+            return user;
+        } catch (err: any) {
+            return rejectWithValue(err?.message || "failed to register");
         }
     }
 );
@@ -55,20 +66,16 @@ export const updatingUserProfile = createAsyncThunk(
     async (formData: any, { rejectWithValue }) => {
         try {
             const { key } = await getStoredValues();
-            let response = await updateUserProfile(formData);
-            if (!response || Object.keys(response).length === 0) {
+            let user = await updateUserProfile(formData);
+            if (!user || Object.keys(user).length === 0) {
                 return rejectWithValue("Invalid server response");
             }
             // 🔐 Secure storage
-            const encrypted = encrypt(JSON.stringify(response), key);
+            const encrypted = encrypt(JSON.stringify(user), key);
             await SecureStore.setItemAsync("udtl", encrypted);
-            return response;
-        } catch (err) {
-            const error = err as AxiosError<any>;
-            console.log("Error -- ", error)
-            showToast("error", "Error", error.response?.data?.message ||
-                error.message ||
-                "Updation failed")
+            return user;
+        } catch (err: any) {
+            return rejectWithValue(err?.message || "failed to update profile");
         }
     }
 );

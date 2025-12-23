@@ -8,9 +8,10 @@ export const fetchAllSpecializations = createAsyncThunk(
     'home/fetchAllSpecializations',
     async (_, { rejectWithValue }) => {
         try {
-            const response = getAllSpecialization();
+            const response = await getAllSpecialization();
             return response;
         } catch (err) {
+            console.log("Error -- ", err)
             const error = err as AxiosError<any>
             rejectWithValue(error?.message)
         }

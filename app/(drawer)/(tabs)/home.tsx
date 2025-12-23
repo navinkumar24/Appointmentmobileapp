@@ -66,7 +66,7 @@ export default function Home() {
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
-      dispatch(fetchAllSpecializations());
+     dispatch(fetchAllSpecializations());
     } catch (error) {
       console.error("Refresh failed:", error);
     } finally {

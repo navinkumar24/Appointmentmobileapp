@@ -14,7 +14,7 @@ export function useLeavesMessage(
   leaves: DoctorLeave[] | undefined | null,
   pickedDate?: Date | string | null,
   prefix = "This doctor is unavailable from "
-): React.ReactNode | null {
+): React.ReactNode | null | any {
   const colors = useColorSchemes();
 
   if (!leaves || leaves.length === 0 || !pickedDate) return null;

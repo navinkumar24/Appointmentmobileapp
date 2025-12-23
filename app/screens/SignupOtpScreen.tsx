@@ -133,7 +133,6 @@ export default function SignupOtpScreen() {
 
     const handleVerify = async () => {
         const code = otp.join("");
-
         if (code.length !== OTP_LENGTH || !/^\d+$/.test(code)) {
             Alert.alert(
                 "Invalid Code",
@@ -141,7 +140,6 @@ export default function SignupOtpScreen() {
             );
             return { success: false };
         }
-
         try {
             const body = {
                 reqId: message,
@@ -170,13 +168,7 @@ export default function SignupOtpScreen() {
         if (!verifyResult.success) return;
         setLoading(true);
         try {
-            const result = await dispatch(
-                logginViaOTP({
-                    mobile: mobileNumber,
-                    accessToken: verifyResult.accessToken,
-                })
-            ).unwrap();
-
+            const result = await dispatch(logginViaOTP({ mobile: mobileNumber, accessToken: verifyResult.accessToken })).unwrap();
             if (result?.statusCode === 200) {
                 router.replace("/(drawer)/(tabs)/home");
             } else if (result?.statusCode === 404) {
@@ -198,7 +190,7 @@ export default function SignupOtpScreen() {
         setInfoMessage("A fresh code has been sent. Check your messages.");
         const body = {
             reqId: message,
-            retryChannel: 11 
+            retryChannel: 11
         }
         console.log("Resend OTP Body -- ", body)
         const response = await OTPWidget.retryOTP(body);

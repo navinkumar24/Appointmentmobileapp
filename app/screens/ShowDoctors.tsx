@@ -32,9 +32,9 @@ export default function ShowDoctors() {
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
-        if (doctorSpecialitiesPageTitle || selectedSpecialist) {
-          await dispatch(fetchAllDoctorDropDown(doctorSpecialitiesPageTitle?.specializationID ?? selectedSpecialist?.specializationID))
-        }
+      if (doctorSpecialitiesPageTitle || selectedSpecialist) {
+        await dispatch(fetchAllDoctorDropDown(doctorSpecialitiesPageTitle?.specializationID ?? selectedSpecialist?.specializationID))
+      }
     } catch (error) {
       console.error("Refresh failed:", error);
     } finally {
@@ -97,6 +97,7 @@ function DoctorCard({ doctor, colors, styles }: { doctor: any, colors: ColorThem
       ?.join("")
       ?.toUpperCase();
   }, [doctor.entityBusinessName]);
+  const [isImageExists, setIsImageExists] = useState(true);
 
   const handleNavigateToBookingPage = async (doctor: any) => {
     await dispatch(setSelectedDoctor(doctor));
@@ -106,8 +107,8 @@ function DoctorCard({ doctor, colors, styles }: { doctor: any, colors: ColorThem
   return (
     <View style={styles.card}>
       <View style={styles.rowTop}>
-        {doctor?.doctorImagePath ? (
-          <Image source={{ uri: doctor?.doctorImagePath }} style={styles.avatar} />
+        {isImageExists && doctor?.doctorImagePath ? (
+          <Image source={{ uri: doctor?.doctorImagePath }} style={styles.avatar} onError={() => setIsImageExists(false)} />
         ) : (
           <View style={[styles.avatarFallback, { backgroundColor: colors.primaryContainer }]}>
             <Text style={[styles.avatarInitial, { color: colors.onPrimaryContainer }]}>{initials}</Text>

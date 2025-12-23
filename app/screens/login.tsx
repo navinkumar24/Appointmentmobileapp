@@ -71,6 +71,7 @@ export default function Login() {
     const isvalidNumber = isValidIndianMobileLocal(mobileNumber);
     if (isvalidNumber) {
       await handleSendOtp();
+
       setLoading(false)
       router.push('/screens/SignupOtpScreen')
     } else {

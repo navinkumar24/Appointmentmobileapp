@@ -1,222 +1,137 @@
 
-import axios, { AxiosError } from "axios";
-import getStoredValues from "../utils/getStoredValues";
-import showToast from "../utils/showToast";
+import { api } from "./client";
 
-export const getAllDoctorDropDown = async (specialization: any) => {
-    const { token, baseUrl } = await getStoredValues();
-    try {
-        const response = await axios.post(`${baseUrl}/opd/doctor/getAllEntity`,
-            {
-                "genericRequestEntity": {
-                    "dropdown": 0,
-                    "specialization": specialization
-                }
-            },
-            {
-                headers: {
-                    Authorization: token,
-                    "Content-Type": "application/json",
-                },
-            }
-        );
-        if (response?.data?.success) {
-            return response?.data?.responseList;
-        }
-    } catch (err) {
-        const error = err as AxiosError<any>;
-        showToast("error", "Error", error?.response?.data?.errorMessage)
+export const getAllDoctorDropDown = async (specialization: any): Promise<any[]> => {
+    const response = await api.post("/opd/doctor/getAllEntity", {
+        genericRequestEntity: {
+            dropdown: 0,
+            specialization,
+        },
+    });
+
+    const data = response.data;
+    if (!data?.success) {
+        throw new Error(data?.errorMessage || "Failed to fetch doctors");
     }
-};
-export const getDoctorLeaves = async (doctorID: number | string) => {
-    const { token, baseUrl } = await getStoredValues();
-    try {
-        const response = await axios.post(`${baseUrl}/opd/doctorleave/getAllEntity`,
-            {
-                "genericRequestEntity": {
-                    "doctorID": doctorID
-                }
-            },
-            {
-                headers: {
-                    Authorization: token,
-                    "Content-Type": "application/json",
-                },
-            }
-        );
-        if (response?.data?.success) {
-            return response?.data?.responseList;
-        }
-    } catch (err) {
-        const error = err as AxiosError<any>;
-        showToast("error", "Error", error?.response?.data?.errorMessage)
-    }
-};
-export const getAvailableSlots = async (doctorID: number | string, appointmentDate: string | any) => {
-    const { token, baseUrl } = await getStoredValues();
-    try {
-        const response = await axios.post(`${baseUrl}/opd/appointment/getAvailableSlots`,
-            {
-                "genericRequestEntity": {
-                    "doctorID": doctorID,
-                    "appointmentDate": appointmentDate
-                }
-            },
-            {
-                headers: {
-                    Authorization: token,
-                    "Content-Type": "application/json",
-                },
-            }
-        );
-        if (response?.data?.success) {
-            return response?.data?.responseList;
-        }
-    } catch (err) {
-        const error = err as AxiosError<any>;
-        showToast("error", "Error", error?.response?.data?.errorMessage)
-    }
-};
-export const createAppointment = async (formData: any) => {
-    const { token, baseUrl } = await getStoredValues();
-    console.log("Verify form data - ", formData)
-    try {
-        const response = await axios.post(`${baseUrl}/opd/payment/verifyOrder`,
-            {
-                "verifyOrderRequest": {
-                    "paymentID": formData?.paymentID,
-                    "appointmentID": formData?.appointmentID,
-                    "signature": formData?.signature
-                }
-            },
-            {
-                headers: {
-                    Authorization: token,
-                    "Content-Type": "application/json",
-                },
-            }
-        );
-        console.log("Created Appointment -- ", response?.data)
-        if (response?.data?.success) {
-            return response?.data?.responseList;
-        }
-    } catch (err) {
-        console.log("Errr  --- ", err)
-        const error = err as AxiosError<any>;
-        showToast("error", "Error", error?.response?.data?.errorMessage)
-    }
+
+    return data.responseList ?? [];
 };
 
-export const getBookedAppointments = async (patientID: number | string) => {
-    const { token, baseUrl } = await getStoredValues();
-    try {
-        const response = await axios.post(`${baseUrl}/opd/appointment/getAllAppointment`,
-            {
-                "genericRequestEntity": {
-                    "doctorID": null,
-                    "patientID": patientID,
-                    "startDate": null,
-                    "endDate": null
-                }
-            },
-            {
-                headers: {
-                    Authorization: token,
-                    "Content-Type": "application/json",
-                },
-            }
-        );
-        if (response?.data?.success) {
-            console.log("Appointments --- ", response?.data)
-            return response?.data?.responseList;
-        }
-    } catch (err) {
-        const error = err as AxiosError<any>;
-        showToast("error", "Error", error?.response?.data?.errorMessage)
-    }
-};
-export const createOrder = async (userID: number | string, amount: number | string, formData: any) => {
-    const { token, baseUrl } = await getStoredValues();
-    console.log("Create Order Called")
-    console.log("user ID -- ", userID)
-    try {
-        const response = await axios.post(`${baseUrl}/opd/payment/createOrder`,
-            {
-                "orderRequestEntity": {
-                    userID: userID,
-                    amount
-                },
-                "appointmentRequestEntity": {
-                    "appointmentStartTime": formData?.startTime,
-                    "appointmentEndTime": formData?.endTime,
-                    "appointmentDate": formData?.appointmentDate,
-                    "doctorID": formData?.doctorID,
-                    "patientID": userID
-                }
-            },
-            {
-                headers: {
-                    Authorization: token,
-                    "Content-Type": "application/json",
-                },
-            }
-        );
-        console.log("Rea -- ", response?.data)
-        // if (response?.data?.success) {
-        //     return response?.data?.responseList?.[0]
-        // }
-        return response?.data?.responseList?.[0]
-    } catch (err) {
-        const error = err as AxiosError<any>;
-        console.log("Errroorrrrr -- ", error?.response?.data)
-        showToast("error", "Error", error?.response?.data?.errorMessage)
-    }
-};
-export const canReschedule: any = async () => {
-    const { token, baseUrl } = await getStoredValues();
-    try {
-        const response = await axios.get(`${baseUrl}/opd/appointment/canReschedule`,
-            {
-                headers: {
-                    Authorization: token,
-                    "Content-Type": "application/json",
-                },
-            }
-        );
+export const getDoctorLeaves = async (doctorID: number | string): Promise<any[]> => {
+    const response = await api.post("/opd/doctorleave/getAllEntity", {
+        genericRequestEntity: { doctorID },
+    });
 
-        return response?.data
-    } catch (err) {
-        const error = err as AxiosError<any>;
-        console.log("Can Reschedule -- ", error?.response?.data)
-        showToast("error", "Error", error?.response?.data?.errorMessage)
+    const data = response.data;
+    if (!data?.success) {
+        throw new Error(data?.errorMessage || "Failed to fetch doctor's leave");
     }
+
+    return data.responseList ?? [];
 };
-export const rescheduleAppointment: any = async (formData: any) => {
-    const { token, baseUrl } = await getStoredValues();
-    try {
-        const response = await axios.post(`${baseUrl}/opd/appointment/rescheduleAppointment`,
-            {
-                "rescheduleRequest": {
-                    "appointmentID": formData?.appointmentID,
-                    "startTime": formData?.startTime,
-                    "endTime": formData?.endTime,
-                    "newAppointmentDate": formData?.newAppointmentDate
-                }
-            },
-            {
-                headers: {
-                    Authorization: token,
-                    "Content-Type": "application/json",
-                },
-            }
-        );
 
-        console.log("Data -- ", response?.data)
 
-        return response?.data?.responseList
-    } catch (err) {
-        const error = err as AxiosError<any>;
-        console.log("Reschedule Error -- ", error?.response?.data)
-        showToast("error", "Error", error?.response?.data?.errorMessage)
+export const getAvailableSlots = async (doctorID: number | string, appointmentDate: string): Promise<any[]> => {
+    const response = await api.post("/opd/appointment/getAvailableSlots", {
+        genericRequestEntity: {
+            doctorID,
+            appointmentDate,
+        },
+    });
+
+    const data = response.data;
+    if (!data?.success) {
+        throw new Error(data?.errorMessage || "Failed to fetch available slots");
     }
+
+    return data.responseList ?? [];
+};
+
+export const createAppointment = async (formData: any): Promise<any[]> => {
+    const response = await api.post("/opd/payment/verifyOrder", {
+        verifyOrderRequest: {
+            paymentID: formData?.paymentID,
+            appointmentID: formData?.appointmentID,
+            signature: formData?.signature,
+        },
+    });
+
+    const data = response.data;
+    if (!data?.success) {
+        throw new Error(data?.errorMessage || "Failed to create appointment");
+    }
+
+    return data.responseList ?? [];
+};
+
+export const getBookedAppointments = async (patientID: number | string): Promise<any[]> => {
+    const response = await api.post("/opd/appointment/getAllAppointment", {
+        genericRequestEntity: {
+            doctorID: null,
+            patientID,
+            startDate: null,
+            endDate: null,
+        },
+    });
+
+    const data = response.data;
+    if (!data?.success) {
+        throw new Error(data?.errorMessage || "Failed to fetch appointments");
+    }
+
+    return data.responseList ?? [];
+};
+
+export const createOrder = async (
+    userID: number | string,
+    amount: number | string,
+    formData: any
+): Promise<any | null> => {
+    const response = await api.post("/opd/payment/createOrder", {
+        orderRequestEntity: {
+            userID,
+            amount,
+        },
+        appointmentRequestEntity: {
+            appointmentStartTime: formData?.startTime,
+            appointmentEndTime: formData?.endTime,
+            appointmentDate: formData?.appointmentDate,
+            doctorID: formData?.doctorID,
+            patientID: userID,
+        },
+    });
+
+    const data = response.data;
+    if (!data?.success) {
+        throw new Error(data?.errorMessage || "Failed to create order");
+    }
+
+    return data.responseList ? data.responseList[0] ?? null : null;
+};
+
+export const canReschedule = async (): Promise<any> => {
+    const response = await api.get("/opd/appointment/canReschedule");
+    const data = response.data;
+    if (!data?.success) {
+        throw new Error(data?.errorMessage || "Failed to check reschedule availability");
+    }
+    return data.response ?? data.responseList ?? data;
+};
+
+
+export const rescheduleAppointment = async (formData: any): Promise<any[]> => {
+    const response = await api.post("/opd/appointment/rescheduleAppointment", {
+        rescheduleRequest: {
+            appointmentID: formData?.appointmentID,
+            startTime: formData?.startTime,
+            endTime: formData?.endTime,
+            newAppointmentDate: formData?.newAppointmentDate,
+        },
+    });
+
+    const data = response.data;
+    if (!data?.success) {
+        throw new Error(data?.errorMessage || "Failed to reschedule appointment");
+    }
+    return data.responseList ?? [];
 };

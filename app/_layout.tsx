@@ -7,6 +7,8 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import Toast from "react-native-toast-message";
 import NetworkStatusBanner from "./screens/NetworkStatusBanner";
+import { initializeApi } from "@/api";
+initializeApi();
 
 export default function RootLayout() {
   return (

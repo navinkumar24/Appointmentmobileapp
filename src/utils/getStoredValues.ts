@@ -7,17 +7,23 @@ const getStoredValues = async () => {
   const widgetId = "356c6d6a5045373336363339";
   const tokenAuth = "477387TQM11Jolq69130c59P1"
   const size = 256;
-  const tkn = await SecureStore.getItemAsync("tkn");
+
 
   let userDetails = null;
   const udtl = await SecureStore.getItemAsync("udtl");
+  let tkn = await SecureStore.getItemAsync("tkn");
+  let refTkn = await SecureStore.getItemAsync("refTkn");
   if (udtl) {
     const decrypted = decrypt(udtl, key);
     userDetails = JSON.parse(decrypted);
   }
+  const token = decrypt(tkn, key);
+  const refreshToken = decrypt(refTkn, key);
+
   return {
     baseUrl,
-    token: userDetails?.token,
+    token,
+    refreshToken,
     key,
     size,
     widgetId,

@@ -250,7 +250,7 @@ const Appointment = () => {
           ))
         )}
         {!filteredAppointments?.length && <View>
-          <Text style={{ fontSize: 15, fontWeight: '600', alignSelf: "center", marginTop: 100 }}>
+          <Text style={{ fontSize: 15, fontWeight: '600', alignSelf: "center", marginTop: 100 , color : colors?.onSurface}}>
             Not Available
           </Text>
         </View>}
