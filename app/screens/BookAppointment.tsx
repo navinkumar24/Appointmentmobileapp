@@ -11,6 +11,7 @@ import {
   Keyboard,
   ScrollView,
   RefreshControl,
+  ActivityIndicator,
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -29,6 +30,7 @@ import getenvValues from "@/utils/getenvValues";
 import { createOrder } from "@/api/appointmentBooking";
 import { useRouter } from "expo-router";
 
+
 export default function BookAppointment() {
   const colors = useColorSchemes();
   const styles = dynamicStyles(colors);
@@ -43,6 +45,7 @@ export default function BookAppointment() {
   const [selectedSlot, setSelectedSlot] = useState<any>(null);
   const router = useRouter();
   const [refreshing, setRefreshing] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -125,56 +128,60 @@ export default function BookAppointment() {
   }
 
   const handlePayment = async () => {
-    console.log("Called ---")
-    const { razor_pay_key } = getenvValues();
+    try {
+      setLoading(true);
+      const { razor_pay_key } = getenvValues();
 
-    if (!userDetails || !selectedDoctor) return;
+      if (!userDetails || !selectedDoctor) return;
 
-    let formData = {
-      startTime: selectedSlot?.startTime,
-      endTime: selectedSlot?.endTime,
-      appointmentDate: dayjs(pickedDate)?.format("DD-MM-YYYY"),
-      doctorID: selectedDoctor?.entityBusinessID,
-      patientID: userDetails?.entityBusinessID
-    }
-
-    console.log("Form Data -- ", formData)
-
-    const orderResponse = await createOrder(userDetails?.entityBusinessID, selectedDoctor?.opdNewCharges, formData);
-    console.log("Order Response -- ", orderResponse);
-
-    if (selectedDoctor?.entityBusinessID && pickedDate) {
-      dispatch(fetchAvailableSlots({ doctorID: selectedDoctor?.entityBusinessID, appointmentDate: dayjs(pickedDate)?.format("DD-MM-YYYY") }))
-    }
-
-    var options: any = {
-      description: 'Taking first step towards your health.',
-      currency: 'INR',
-      key: razor_pay_key,
-      amount: selectedDoctor?.opdNewCharges,
-      name: 'Booking Appointment',
-      order_id: orderResponse?.orderID,//Replace this with an order_id created using Orders API.
-      prefill: {
-        contact: userDetails?.mobileNumber,
-        name: userDetails?.entityBusinessName
-      },
-      theme: { color: colors.primary }
-    }
-    RazorpayCheckout.open(options).then(async (data) => {
-      console.log("Razorpay response -- ", data)
-      let NewformData = {
-        signature: data?.razorpay_signature,
-        paymentID: data?.razorpay_payment_id,
-        appointmentID: orderResponse?.appointmentID
+      let formData = {
+        startTime: selectedSlot?.startTime,
+        endTime: selectedSlot?.endTime,
+        appointmentDate: dayjs(pickedDate)?.format("DD-MM-YYYY"),
+        doctorID: selectedDoctor?.entityBusinessID,
+        patientID: userDetails?.entityBusinessID
       }
-      console.log("Form Data for verify -- ", NewformData)
-      await dispatch(creatingAppointment(NewformData))
-      setSelectedSlot(null);
-      router.replace("/(drawer)/(tabs)/home")
-    }).catch((error) => {
-      // handle failure
-      console.log(`Error: ${error.code} | ${error.description}`);
-    });
+      console.log("Form Data -- ", formData)
+      const orderResponse = await createOrder(userDetails?.entityBusinessID, selectedDoctor?.opdNewCharges, formData);
+      console.log("Order Response -- ", orderResponse);
+
+      if (selectedDoctor?.entityBusinessID && pickedDate) {
+        dispatch(fetchAvailableSlots({ doctorID: selectedDoctor?.entityBusinessID, appointmentDate: dayjs(pickedDate)?.format("DD-MM-YYYY") }))
+      }
+      var options: any = {
+        description: 'Taking first step towards your health.',
+        currency: 'INR',
+        key: razor_pay_key,
+        amount: selectedDoctor?.opdNewCharges,
+        name: 'Booking Appointment',
+        order_id: orderResponse?.orderID,//Replace this with an order_id created using Orders API.
+        prefill: {
+          contact: userDetails?.mobileNumber,
+          name: userDetails?.entityBusinessName
+        },
+        theme: { color: colors.primary }
+      }
+      RazorpayCheckout.open(options).then(async (data) => {
+        console.log("Razorpay response -- ", data)
+        let NewformData = {
+          signature: data?.razorpay_signature,
+          paymentID: data?.razorpay_payment_id,
+          appointmentID: orderResponse?.appointmentID
+        }
+        console.log("Form Data for verify -- ", NewformData)
+        await dispatch(creatingAppointment(NewformData))
+        setSelectedSlot(null);
+        setLoading(false);
+        router.replace("/(drawer)/(tabs)/appointment")
+      }).catch((error) => {
+        // handle failure
+        setLoading(false);
+        console.log(`Error: ${error.code} | ${error.description}`);
+      });
+    }catch(err){
+      console.log("Error -- ", err)
+      setLoading(false);
+    }
   }
 
   return (
@@ -274,7 +281,7 @@ export default function BookAppointment() {
           disabled={!(selectedDoctor && pickedDate && selectedSlot)}
           onPress={handlePayment}
         >
-          <Text style={styles.bookBtnText}>Proceed To Pay ₹ {selectedDoctor?.opdNewCharges}</Text>
+          {loading ? <ActivityIndicator size="small" color={colors.onPrimary} /> : <Text style={styles.bookBtnText}>Proceed To Pay ₹ {selectedDoctor?.opdNewCharges}</Text>}
         </TouchableOpacity>
       </View>
 
@@ -454,7 +461,7 @@ const dynamicStyles = (colors: ColorTheme) =>
       alignSelf: "center",
       color: colors.onSurfaceVariant,
       fontWeight: '500',
-      marginBottom : 20
+      marginBottom: 20
     },
 
     slotButton: {

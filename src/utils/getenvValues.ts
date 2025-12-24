@@ -9,6 +9,7 @@ const getenvValues = () => {
     const companyLogo = "";
     const companyGmail = "gsneuroscience@gmail.com";
     const companyMobile = "+91 9973187093"
+    const companyAddress = "3/214, Boring Rd, New Patliputra Colony,<br> Patna, Bihar 800013";
     const size = 256;
     return {
         baseUrl,
@@ -19,7 +20,8 @@ const getenvValues = () => {
         razor_pay_key,
         companyName,
         companyGmail,
-        companyMobile
+        companyMobile,
+        companyAddress
     };
 };
 

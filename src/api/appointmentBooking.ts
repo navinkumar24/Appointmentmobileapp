@@ -87,6 +87,10 @@ export const createOrder = async (
     amount: number | string,
     formData: any
 ): Promise<any | null> => {
+
+    console.log("User ID -- ", userID)
+    console.log("Amount -- ", amount)
+    console.log("Form Data -- ", formData)
     const response = await api.post("/opd/payment/createOrder", {
         orderRequestEntity: {
             userID,
@@ -100,9 +104,10 @@ export const createOrder = async (
             patientID: userID,
         },
     });
-
+    console.log("Create order -- ", response)
     const data = response.data;
     if (!data?.success) {
+        console.log("Error -- ", data?.errorMessage)
         throw new Error(data?.errorMessage || "Failed to create order");
     }
 

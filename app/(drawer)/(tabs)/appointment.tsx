@@ -160,7 +160,7 @@ const Appointment = () => {
                 <Text style={styles.paidBadge}>₹ {item?.amount || 0}</Text>
               </View>
               <Pressable
-                onPress={async () => { await downloadInvoice(item) }}
+                onPress={async () => { await downloadInvoice(item), console.log("Invoice data - ", item) }}
                 style={styles.printButtonWrapper}
               >
                 <LinearGradient
@@ -180,12 +180,7 @@ const Appointment = () => {
 
           {isExpanded && (
             <View style={styles.details}>
-              <Row label="Patient mobile" value={item.patientMobile ?? "—"} colors={colors} />
-              <Row label="Patient DOB" value={item.patientDOB ?? "—"} colors={colors} />
-              <Row label="Address" value={item.patientAddress ?? "—"} colors={colors} />
               <Row label="Appointment ID" value={item.appointmentID ?? "—"} colors={colors} />
-              <Row label="Order ID" value={item.orderID ?? "—"} colors={colors} />
-              <Row label="Payment ID" value={item.paymentID ?? "—"} colors={colors} />
               <Row label="Booked at" value={item.effectiveDateFrom ? new Date(item.effectiveDateFrom).toLocaleString() : "—"} colors={colors} />
             </View>
           )}
