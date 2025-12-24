@@ -26,7 +26,7 @@ export const logginViaOTP = createAsyncThunk(
     }
 );
 export const loggingOut = createAsyncThunk(
-    "auth/logginViaOTP",
+    "auth/loggingOut",
     async (_, { rejectWithValue }) => {
         try {
             const router = useRouter()

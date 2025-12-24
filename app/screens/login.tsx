@@ -73,7 +73,7 @@ export default function Login() {
       await handleSendOtp();
 
       setLoading(false)
-      router.push('/screens/SignupOtpScreen')
+      router.replace('/screens/SignupOtpScreen')
     } else {
       setLoading(false)
       showToast("error", "Invalid Mobile Number", "Enter a valid mobile number")

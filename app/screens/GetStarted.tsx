@@ -55,7 +55,7 @@ const GetStarted: React.FC = () => {
 
   const handleGetStarted = async () => {
     await SecureStore.setItemAsync("GET_STARTED_KEY", "true")
-    router.push("/screens/login");
+    router.replace("/screens/login");
   };
 
   return (

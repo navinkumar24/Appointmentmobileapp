@@ -169,6 +169,7 @@ export default function SignupOtpScreen() {
         setLoading(true);
         try {
             const result = await dispatch(logginViaOTP({ mobile: mobileNumber, accessToken: verifyResult.accessToken })).unwrap();
+            console.log("Login Result -- ", result);
             if (result?.statusCode === 200) {
                 router.replace("/(drawer)/(tabs)/home");
             } else if (result?.statusCode === 404) {

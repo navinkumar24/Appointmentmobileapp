@@ -28,6 +28,8 @@ export const setUserDetails = createAsyncThunk(
     async (payload: any) => {
         if (payload == null) {
             await SecureStore.deleteItemAsync("udtl");
+            await SecureStore.deleteItemAsync("tkn");
+            await SecureStore.deleteItemAsync("refTkn");
             return null;
         }
         return payload;
@@ -59,7 +61,7 @@ export const userSlice = createSlice({
             })
             .addCase(fetchUserDetails.rejected, (state, action) => {
                 state.loading = false;
-                state.userDetails = action.error
+                state.userDetails = null
             })
             .addCase(setUserDetails.pending, (state) => {
                 state.loading = true;
@@ -70,7 +72,7 @@ export const userSlice = createSlice({
             })
             .addCase(setUserDetails.rejected, (state, action) => {
                 state.loading = false;
-                state.userDetails = action.error
+                state.userDetails = null
             })
     }
 })

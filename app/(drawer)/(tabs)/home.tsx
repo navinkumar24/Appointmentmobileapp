@@ -76,7 +76,7 @@ export default function Home() {
 
   useEffect(() => {
     dispatch(fetchAllSpecializations());
-  }, [dispatch]);
+  }, []);
 
   const fetchAndSanitizeSvg = useCallback(async (entityID: number, iconUrl: string) => {
     if (!iconUrl) return null;

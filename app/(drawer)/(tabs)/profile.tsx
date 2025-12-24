@@ -122,7 +122,7 @@ function SettingItem({ icon, label, isLogout = false }: any) {
       onPress={() => {
         if (label == "Logout") {
           dispatch(setUserDetails(null))
-          router.push("/screens/login")
+          router.replace("/screens/login")
         }
       }
       }

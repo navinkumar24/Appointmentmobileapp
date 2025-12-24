@@ -12,7 +12,7 @@ import { setDoctorSpecialitiesPageTitle } from "@/store/utilsSlice";
 import { useEffect } from "react";
 import { fetchUserDetails, setUserDetails } from "@/store/userSlice";
 import getenvValues from "@/utils/getenvValues";
-
+import * as SecureStore from 'expo-secure-store'
 
 const MENU_ITEMS = [
     { id: 1, label: "Home", icon: "home-outline", route: "(tabs)/home" },
@@ -42,7 +42,10 @@ export default function DrawerLayout() {
 
     const handleLogout = async () => {
         await dispatch(setUserDetails(null));
-        router.push("/screens/login")
+        await SecureStore.deleteItemAsync("udtl");
+        await SecureStore.deleteItemAsync("tkn");
+        await SecureStore.deleteItemAsync("refTkn");
+        router.replace("/screens/login")
     }
 
     const renderDrawerContent = () => {
@@ -108,7 +111,7 @@ export default function DrawerLayout() {
                     <TouchableOpacity
                         key={5}
                         style={[styles.menuItem]}
-                        onPress={handleLogout}
+                        onPress={() => handleLogout()}
                         activeOpacity={0.8}
                     >
                         <MaterialCommunityIcons
@@ -198,7 +201,7 @@ const dynamicStyles = (colors: ColorTheme) =>
         welcomeText: {
             fontSize: 18,
             fontWeight: "600",
-            textAlign : 'center'
+            textAlign: 'center'
         },
         menuContainer: {
             flex: 1,
